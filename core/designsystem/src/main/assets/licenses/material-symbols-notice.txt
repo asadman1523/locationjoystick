@@ -1,0 +1,9 @@
+Google Material Symbols — joystick
+
+The joystick icon is provided by Google under the Apache License, Version 2.0.
+The complete license is included in material-symbols-apache-2.0.txt.
+
+Project: https://github.com/google/material-design-icons
+Source: https://fonts.gstatic.com/render/v1/Material+Symbols+Outlined/24dp/joystick.kt?var=opsz,wght,FILL,GRAD,ROND@24,400,0,0,50
+
+Adapted to the app's package and lazy initialization. Vector geometry is unchanged.
