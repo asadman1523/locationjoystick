@@ -594,6 +594,7 @@ class SettingsViewModel
                         } else {
                             favoriteRepository.removeHotLocations()
                         }
+                        clearHomeIfMissing()
                     }
                     if (d.hotRoutesEnabled != null || d.selectedHotRouteIds != null) {
                         if (state.hotRoutesEnabled) {
@@ -698,6 +699,7 @@ class SettingsViewModel
                 selectedHotRouteIds = state.selectedHotRouteIds,
                 routesSortNewestFirst = settingsRepository.getRoutesSortNewestFirst().first(),
                 favoritesSortNewestFirst = settingsRepository.getFavoritesSortNewestFirst().first(),
+                homeFavoriteId = settingsRepository.getHomeFavoriteId().first(),
                 routesSortMode = settingsRepository.getRoutesSortMode().first(),
                 favoritesSortMode = settingsRepository.getFavoritesSortMode().first(),
             )
@@ -915,6 +917,14 @@ class SettingsViewModel
             settingsRepository.setFavoritesSortNewestFirst(data.favoritesSortNewestFirst)
             settingsRepository.setRoutesSortMode(data.routesSortMode)
             settingsRepository.setFavoritesSortMode(data.favoritesSortMode)
+            if (replace || data.homeFavoriteId != null) settingsRepository.setHomeFavoriteId(data.homeFavoriteId)
+            clearHomeIfMissing()
+        }
+
+        /** Home is a favorite id; clear it when that favorite no longer exists (e.g. hot locations turned off). */
+        private suspend fun clearHomeIfMissing() {
+            val id = settingsRepository.getHomeFavoriteId().first() ?: return
+            if (favoriteRepository.getFavorites().first().none { it.id == id }) settingsRepository.setHomeFavoriteId(null)
         }
 
         fun importFromGpsJoystick(

@@ -169,6 +169,9 @@ class MapController
                 ) { favorites, sortMode -> favorites.sortedBySavedItemMode(sortMode) { it.name } }
                     .collect { sorted -> _sharedState.update { it.copy(favorites = sorted) } }
             }
+            appScope.launch {
+                settingsRepository.getHomeFavoriteId().collect { id -> _sharedState.update { it.copy(homeFavoriteId = id) } }
+            }
         }
 
         private fun observeRouteWaypoints() {
@@ -312,10 +315,11 @@ class MapController
 
         /**
          * Resolves the initial map position on startup:
-         * 1. Uses the remembered last location if enabled.
-         * 2. Falls back to the real device location (last-known fix, then a fresh fix), excluding mock
+         * 1. Uses the Home favorite's position if one is set (beats the remember toggle).
+         * 2. Else the remembered last location if enabled.
+         * 3. Falls back to the real device location (last-known fix, then a fresh fix), excluding mock
          *    providers, only when location permission is granted.
-         * 3. Falls back to the app default location when permission is granted but no fix arrives, so the
+         * 4. Falls back to the app default location when permission is granted but no fix arrives, so the
          *    map always shows a point.
          *
          * Single-flight: a call while a previous restore is still running is a no-op. A restore that ran
@@ -329,7 +333,7 @@ class MapController
                     if (locationRepository.currentPosition.value == null) {
                         val remember = settingsRepository.getRememberLastLocation().first()
                         val savedLocation = if (remember) settingsRepository.getLastLocation().first() else null
-                        val known = savedLocation ?: realLocationRepository.lastKnownRealPosition()
+                        val known = homePosition() ?: savedLocation ?: realLocationRepository.lastKnownRealPosition()
                         val initialPos =
                             known
                                 ?: if (realLocationRepository.hasFinePermission()) {
@@ -352,12 +356,31 @@ class MapController
                 }
         }
 
+        /** Home favorite's position, or null when none is set or the favorite no longer exists. */
+        private suspend fun homePosition(): LatLng? {
+            val id = settingsRepository.getHomeFavoriteId().first() ?: return null
+            return favoriteRepository
+                .getFavorites()
+                .first()
+                .find { it.id == id }
+                ?.position
+        }
+
+        /** Marks [id] as Home, moving the flag from any other favorite; clears it if [id] is already Home. */
+        fun toggleHomeFavorite(id: String) {
+            appScope.launch {
+                val current = settingsRepository.getHomeFavoriteId().first()
+                settingsRepository.setHomeFavoriteId(if (current == id) null else id)
+            }
+        }
+
         // ── Actions ──────────────────────────────────────────────────────────────
 
         fun startSpoofing() {
             appScope.launch {
                 val startPos =
                     locationRepository.currentPosition.value
+                        ?: homePosition()
                         ?: settingsRepository.getLastLocation().first()
                         // No position at all yet: start where the map opens, so the first fix is
                         // inside the selected tile provider's coverage (Beijing for Amap, Paris for OSM).

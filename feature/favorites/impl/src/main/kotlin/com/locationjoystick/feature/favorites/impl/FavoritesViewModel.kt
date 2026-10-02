@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,13 +42,15 @@ class FavoritesViewModel
                 pendingDeleteIdFlow,
                 settingsRepository.getFavoritesSortMode(),
                 settingsRepository.getHideTeleportFeatures(),
-            ) { favorites, pendingDeleteId, sortMode, hideTeleportFeatures ->
+                settingsRepository.getHomeFavoriteId(),
+            ) { favorites, pendingDeleteId, sortMode, hideTeleportFeatures, homeFavoriteId ->
                 FavoritesUiState(
                     favorites = favorites.sortedBySavedItemMode(sortMode) { it.name },
                     isLoading = false,
                     pendingDeleteId = pendingDeleteId,
                     sortMode = sortMode,
                     hideTeleportFeatures = hideTeleportFeatures,
+                    homeFavoriteId = homeFavoriteId,
                 )
             }.stateIn(
                 scope = viewModelScope,
@@ -102,6 +105,14 @@ class FavoritesViewModel
             if (uiState.value.hideTeleportFeatures) return
             viewModelScope.launch {
                 teleportUseCase.execute(favorite.position)
+            }
+        }
+
+        /** Marks [id] as Home (moving it from any other favorite); clears Home if [id] already is. */
+        fun toggleHome(id: String) {
+            viewModelScope.launch {
+                val current = settingsRepository.getHomeFavoriteId().first()
+                settingsRepository.setHomeFavoriteId(if (current == id) null else id)
             }
         }
 

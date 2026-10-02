@@ -7,6 +7,8 @@
     <string name="favorite_target_detail_walk_via_roads">"Walk via roads"</string>
     <string name="favorite_target_detail_do_nothing">"Do nothing"</string>
     <string name="favorites_list_save_current_location_cd">"Save current location"</string>
+    <string name="favorites_list_set_home_cd">"Set as home"</string>
+    <string name="favorites_list_remove_home_cd">"Remove home"</string>
     <string name="favorites_list_no_saved_favorites_yet">"No saved favorites yet"</string>
     <string name="delete_confirm_dialog_title">"Delete \"%1$s\"?"</string>
     <string name="delete_confirm_dialog_message_favorite">"This favorite will be permanently deleted and cannot be undone."</string>

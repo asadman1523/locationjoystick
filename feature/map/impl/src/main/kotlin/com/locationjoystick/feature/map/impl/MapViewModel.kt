@@ -163,6 +163,7 @@ class MapViewModel
                                 routes = shared.routes,
                                 favorites = shared.favorites,
                                 favoriteCooldownStates = shared.favoriteCooldownStates,
+                                homeFavoriteId = shared.homeFavoriteId,
                                 routeTrace = shared.routeTrace,
                                 walkMode = shared.walkMode,
                                 isRoaming = shared.isRoaming,
@@ -378,6 +379,10 @@ class MapViewModel
 
                 is MapAction.SelectFavorite -> {
                     handleSelectFavorite(action.favorite)
+                }
+
+                is MapAction.ToggleHomeFavorite -> {
+                    mapController.toggleHomeFavorite(action.favorite.id)
                 }
 
                 is MapAction.SaveCurrentLocation -> {

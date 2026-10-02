@@ -282,6 +282,30 @@ class SettingsViewModelSaveTest {
         }
 
     @Test
+    fun `turning hot locations off clears Home when it was a hot favorite`() =
+        runTest(testDispatcher) {
+            backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }
+            viewModel.userFeedback.test {
+                viewModel.setHotLocationsEnabled(true)
+                viewModel.saveChanges()
+                awaitItem()
+                fakeSettingsRepo.setHomeFavoriteId(
+                    fakeFavoriteRepo
+                        .getFavorites()
+                        .first()
+                        .first()
+                        .id,
+                )
+
+                viewModel.setHotLocationsEnabled(false)
+                viewModel.saveChanges()
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+            assertEquals(null, fakeSettingsRepo.getHomeFavoriteId().first())
+        }
+
+    @Test
     fun `saveChanges with hotLocationsEnabled false removes hot favorites`() =
         runTest(testDispatcher) {
             backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }
@@ -542,6 +566,14 @@ internal class SaveTestPreferencesDataSource : PreferencesDataSource {
     override fun getLastLocation(): Flow<LatLng?> = flowOf(null)
 
     override suspend fun setLastLocation(location: LatLng) = Unit
+
+    val homeFavoriteIdFlow = MutableStateFlow<String?>(null)
+
+    override fun getHomeFavoriteId(): Flow<String?> = homeFavoriteIdFlow
+
+    override suspend fun setHomeFavoriteId(id: String?) {
+        homeFavoriteIdFlow.value = id
+    }
 
     override fun getJitterIdleRadius(): Flow<Double> = flowOf(AppPreferencesDataSource.DEFAULT_JITTER_IDLE_RADIUS_METERS)
 

@@ -11,6 +11,7 @@ import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.data.TeleportUseCase
 import com.locationjoystick.core.data.WalkCoordinator
 import com.locationjoystick.core.data.WalkToEngine
+import com.locationjoystick.core.model.FavoriteLocation
 import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.MockMode
 import com.locationjoystick.core.model.RoamingDefaults
@@ -19,6 +20,7 @@ import com.locationjoystick.core.model.SpeedUnit
 import com.locationjoystick.core.routing.OsrmClient
 import com.locationjoystick.core.routing.RoutingErrorReporter
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -85,6 +87,7 @@ class MapControllerTest {
                     every { getRoamingDefaults() } returns flowOf(RoamingDefaults())
                     every { getSettingsSnapshot() } returns emptyFlow()
                     every { getRememberLastLocation() } returns flowOf(false)
+                    every { getHomeFavoriteId() } returns flowOf(null)
                 }
             val osrmClient = mockk<OsrmClient>(relaxed = true)
             val walkToEngine = WalkToEngine(settingsRepository, locationRepository)
@@ -185,6 +188,7 @@ class MapControllerTest {
                     every { getRoamingDefaults() } returns flowOf(RoamingDefaults())
                     every { getSettingsSnapshot() } returns emptyFlow()
                     every { getRememberLastLocation() } returns flowOf(false)
+                    every { getHomeFavoriteId() } returns flowOf(null)
                 }
             // Mock OSRM to return a simple 2-point route
             val osrmClient =
@@ -286,6 +290,7 @@ class MapControllerTest {
                     every { getRoamingDefaults() } returns flowOf(RoamingDefaults())
                     every { getSettingsSnapshot() } returns emptyFlow()
                     every { getRememberLastLocation() } returns flowOf(false)
+                    every { getHomeFavoriteId() } returns flowOf(null)
                 }
             val fetchGate = CompletableDeferred<Unit>()
             val osrmClient =
@@ -387,6 +392,7 @@ class MapControllerTest {
                     every { getRoamingDefaults() } returns flowOf(RoamingDefaults())
                     every { getSettingsSnapshot() } returns emptyFlow()
                     every { getRememberLastLocation() } returns flowOf(false)
+                    every { getHomeFavoriteId() } returns flowOf(null)
                 }
             val osrmClient =
                 mockk<OsrmClient>(relaxed = true).also {
@@ -479,6 +485,58 @@ class MapControllerTest {
             runCurrent()
 
             assertEquals(LatLng(3.0, 4.0), locationRepository.currentPosition.value)
+        }
+
+    @Test
+    fun `restoreLastLocation prefers Home over the remembered location and real fix`() =
+        runTest {
+            val real = mockk<RealLocationRepository> { every { lastKnownRealPosition() } returns LatLng(1.0, 2.0) }
+            val locationRepository = LocationRepository()
+            val home = FavoriteLocation(id = "h", name = "Home", position = LatLng(5.0, 6.0), createdAt = 0)
+            val controller =
+                buildRestoreController(
+                    locationRepository,
+                    real,
+                    backgroundScope,
+                    saved = LatLng(3.0, 4.0),
+                    homeId = "h",
+                    favorites = listOf(home),
+                )
+
+            controller.restoreLastLocationIfNeeded()
+            runCurrent()
+
+            assertEquals(LatLng(5.0, 6.0), locationRepository.currentPosition.value)
+        }
+
+    @Test
+    fun `restoreLastLocation ignores a Home id whose favorite is gone`() =
+        runTest {
+            val real = mockk<RealLocationRepository> { every { lastKnownRealPosition() } returns LatLng(1.0, 2.0) }
+            val locationRepository = LocationRepository()
+            val controller =
+                buildRestoreController(locationRepository, real, backgroundScope, saved = LatLng(3.0, 4.0), homeId = "gone")
+
+            controller.restoreLastLocationIfNeeded()
+            runCurrent()
+
+            assertEquals(LatLng(3.0, 4.0), locationRepository.currentPosition.value)
+        }
+
+    @Test
+    fun `toggleHomeFavorite sets, moves and clears the Home id`() =
+        runTest {
+            val real = mockk<RealLocationRepository>(relaxed = true)
+            val controller = buildRestoreController(LocationRepository(), real, backgroundScope, homeId = "a")
+            val settings = lastRestoreSettings!!
+
+            controller.toggleHomeFavorite("b")
+            runCurrent()
+            coVerify { settings.setHomeFavoriteId("b") }
+
+            controller.toggleHomeFavorite("a")
+            runCurrent()
+            coVerify { settings.setHomeFavoriteId(null) }
         }
 
     @Test
@@ -588,6 +646,9 @@ class MapControllerTest {
         realLocationRepository: RealLocationRepository,
         scope: kotlinx.coroutines.CoroutineScope,
         saved: LatLng? = null,
+        homeId: String? = null,
+        favorites: List<FavoriteLocation> = emptyList(),
+        homeFlow: MutableStateFlow<String?> = MutableStateFlow(homeId),
     ): MapController {
         val settingsRepository =
             mockk<SettingsRepository>(relaxed = true) {
@@ -600,6 +661,7 @@ class MapControllerTest {
                 every { getSettingsSnapshot() } returns emptyFlow()
                 every { getRememberLastLocation() } returns flowOf(saved != null)
                 every { getLastLocation() } returns flowOf(saved)
+                every { getHomeFavoriteId() } returns homeFlow
             }
         val osrmClient = mockk<OsrmClient>(relaxed = true)
         val walkCoordinator = WalkCoordinator(locationRepository, WalkToEngine(settingsRepository, locationRepository))
@@ -615,7 +677,7 @@ class MapControllerTest {
             locationRepository = locationRepository,
             routeRepository = mockk<RouteRepository>(relaxed = true) { every { getRoutes() } returns emptyFlow() },
             favoriteRepository =
-                mockk<FavoriteRepository>(relaxed = true) { every { getFavorites() } returns flowOf(emptyList()) },
+                mockk<FavoriteRepository>(relaxed = true) { every { getFavorites() } returns flowOf(favorites) },
             settingsRepository = settingsRepository,
             roamingRepository = roamingRepository,
             walkCoordinator = walkCoordinator,
@@ -628,6 +690,8 @@ class MapControllerTest {
             routingErrorReporter = routingErrorReporter,
             groupRepository = mockk(relaxed = true),
             appScope = scope,
-        )
+        ).also { lastRestoreSettings = settingsRepository }
     }
+
+    private var lastRestoreSettings: SettingsRepository? = null
 }

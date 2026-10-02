@@ -29,6 +29,7 @@ data class MapSharedState(
     val routes: List<Route> = emptyList(),
     val favorites: List<FavoriteLocation> = emptyList(),
     val favoriteCooldownStates: Map<String, CooldownState> = emptyMap(),
+    val homeFavoriteId: String? = null,
     val isRoaming: Boolean = false,
     val isRoamingPaused: Boolean = false,
     val mapFeatureOrder: List<AppFeature> = AppFeature.DEFAULT_MAP_ORDER,
@@ -54,7 +55,7 @@ fun MapSharedState.nonPositionKey(): Any =
     Triple(
         Triple(mockLocationState, mockMode, isWalkPaused) to
             Triple(walkMode, routeTrace, routes) to
-            Triple(favorites, favoriteCooldownStates, isRoaming),
+            listOf(favorites, favoriteCooldownStates, isRoaming, homeFavoriteId),
         Triple(isRoamingPaused, speedUnit, recentSearches),
         Triple(roamingDefaults, jitterRadiusMeters, debugStatsEnabled) to Pair(isRoadRouteFetchInFlight, routeProgress),
     )

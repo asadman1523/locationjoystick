@@ -1,0 +1,7 @@
+{
+  "version": "0.27.0",
+  "date": "2026-10-02",
+  "entries": [
+    { "category": "feat", "scope": "Favorite Locations", "summary": "You can now mark one favorite as Home with a house icon. The app starts there instead of your last location. Tap the house again to go back to the last location." }
+  ]
+}

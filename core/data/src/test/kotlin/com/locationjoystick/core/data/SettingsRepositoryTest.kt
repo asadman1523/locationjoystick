@@ -1359,6 +1359,14 @@ class FakeAppPreferencesDataSource : PreferencesDataSource {
         lastLocationFlow.value = location
     }
 
+    private val homeFavoriteIdFlow = MutableStateFlow<String?>(null)
+
+    override fun getHomeFavoriteId(): Flow<String?> = homeFavoriteIdFlow
+
+    override suspend fun setHomeFavoriteId(id: String?) {
+        homeFavoriteIdFlow.value = id
+    }
+
     override fun getJitterIdleRadius(): Flow<Double> = jitterIdleRadiusFlow
 
     override fun getJitterMovingRadius(): Flow<Double> = jitterMovingRadiusFlow

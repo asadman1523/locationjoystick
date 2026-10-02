@@ -331,6 +331,8 @@ internal class WidgetPanelPresenter(
                 hideTeleport = hideTeleportFeatures,
                 sortMode = sortMode,
                 onSortModeSelected = { mode -> serviceScope.launch { settingsRepository.setFavoritesSortMode(mode) } },
+                homeFavoriteId = shared.homeFavoriteId,
+                onToggleHome = { mapController.toggleHomeFavorite(it.id) },
             )
         }
     }

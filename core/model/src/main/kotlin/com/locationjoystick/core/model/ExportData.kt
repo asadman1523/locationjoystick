@@ -21,4 +21,5 @@ data class ExportData(
     val favoritesSortNewestFirst: Boolean = true,
     val routesSortMode: SavedItemSortMode = SavedItemSortMode.NEWEST_FIRST,
     val favoritesSortMode: SavedItemSortMode = SavedItemSortMode.NEWEST_FIRST,
+    val homeFavoriteId: String? = null,
 )

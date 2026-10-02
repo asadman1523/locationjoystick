@@ -55,6 +55,7 @@ import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.component.CooldownAdvisoryBadge
 import com.locationjoystick.core.designsystem.component.DeleteItemType
 import com.locationjoystick.core.designsystem.component.EmptyState
+import com.locationjoystick.core.designsystem.component.HomeToggleButton
 import com.locationjoystick.core.designsystem.component.ListSearchField
 import com.locationjoystick.core.designsystem.component.LjActionSheetRow
 import com.locationjoystick.core.designsystem.component.LjDeleteConfirmDialog
@@ -105,6 +106,7 @@ fun FavoritesRoute(
         onToggleSpoofing = spoofToggle.onToggle,
         locationLabel = spoofToggle.locationLabel,
         onSortModeSelected = viewModel::setSortMode,
+        onToggleHome = viewModel::toggleHome,
         getCurrentPosition = { viewModel.currentPosition },
         bottomBar = bottomBar,
     )
@@ -143,6 +145,7 @@ internal fun FavoritesScreen(
     onToggleSpoofing: () -> Unit = {},
     locationLabel: String? = null,
     onSortModeSelected: (com.locationjoystick.core.model.SavedItemSortMode) -> Unit = {},
+    onToggleHome: (String) -> Unit = {},
     getCurrentPosition: () -> com.locationjoystick.core.model.LatLng? = { null },
     bottomBar: @Composable () -> Unit = {},
 ) {
@@ -254,6 +257,8 @@ internal fun FavoritesScreen(
                                         FavoriteCard(
                                             modifier = Modifier.animateItem(),
                                             favorite = favorite,
+                                            isHome = favorite.id == uiState.homeFavoriteId,
+                                            onToggleHome = { onToggleHome(it.id) },
                                             cooldownState = cooldownStates[favorite.id] ?: CooldownState.Ready,
                                             currentPosition = getCurrentPosition(),
                                             onRowClick = { onTeleport(favorite) },
@@ -389,6 +394,8 @@ internal fun FavoritesScreen(
 @Composable
 private fun FavoriteCard(
     favorite: com.locationjoystick.core.model.FavoriteLocation,
+    isHome: Boolean,
+    onToggleHome: (com.locationjoystick.core.model.FavoriteLocation) -> Unit,
     cooldownState: CooldownState,
     currentPosition: LatLng?,
     onRowClick: (com.locationjoystick.core.model.FavoriteLocation) -> Unit,
@@ -407,6 +414,7 @@ private fun FavoriteCard(
         modifier = modifier,
         onClick = { onRowClick(favorite) },
         trailing = {
+            HomeToggleButton(isHome = isHome, onClick = { onToggleHome(favorite) })
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(LjIcons.MoreVert, contentDescription = stringResource(R.string.favorites_screen_more_options_cd))
@@ -415,6 +423,16 @@ private fun FavoriteCard(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false },
                 ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(stringResource(if (isHome) R.string.favorites_screen_remove_home else R.string.favorites_screen_set_home))
+                        },
+                        onClick = {
+                            onToggleHome(favorite)
+                            menuExpanded = false
+                        },
+                        leadingIcon = { Icon(LjIcons.Home, null) },
+                    )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.favorites_screen_edit)) },
                         onClick = {

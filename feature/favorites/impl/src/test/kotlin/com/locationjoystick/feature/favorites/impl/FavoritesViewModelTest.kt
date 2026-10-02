@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -33,6 +34,7 @@ class FavoritesViewModelTest {
     private val locationRepository = LocationRepository()
     private val settingsRepository: SettingsRepository = mockk(relaxed = true)
     private val teleportUseCase: TeleportUseCase = mockk(relaxed = true)
+    private val homeFlow = MutableStateFlow<String?>(null)
     private lateinit var viewModel: FavoritesViewModel
 
     @Before
@@ -45,6 +47,7 @@ class FavoritesViewModelTest {
         every { settingsRepository.getLastLocation() } returns flowOf(null)
         every { settingsRepository.getRecentSearches() } returns flowOf(emptyList())
         every { settingsRepository.getHideTeleportFeatures() } returns flowOf(false)
+        every { settingsRepository.getHomeFavoriteId() } returns homeFlow
         viewModel = FavoritesViewModel(favoriteRepository, locationRepository, settingsRepository, teleportUseCase)
     }
 
@@ -61,6 +64,21 @@ class FavoritesViewModelTest {
                 assertEquals(emptyList<FavoriteLocation>(), state.favorites)
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    @Test
+    fun toggleHome_sets_moves_and_clears() =
+        runTest {
+            viewModel.toggleHome("a")
+            coVerify { settingsRepository.setHomeFavoriteId("a") }
+
+            homeFlow.value = "a"
+            viewModel.toggleHome("b")
+            coVerify { settingsRepository.setHomeFavoriteId("b") }
+
+            homeFlow.value = "b"
+            viewModel.toggleHome("b")
+            coVerify { settingsRepository.setHomeFavoriteId(null) }
         }
 
     @Test

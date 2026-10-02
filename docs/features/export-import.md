@@ -16,6 +16,8 @@ Covers: routes, favorites, speed profiles, widget/map feature config + shared di
 
 Each entry in `favoriteLocations` includes the optional `category` field (`FavoriteLocation.category`). Old exports without it import cleanly — a missing or `null` `category` defaults to `null`.
 
+`homeFavoriteId` (`ExportData.homeFavoriteId`) carries the id of the Home favorite, written only when set. Old exports without it import cleanly with no Home. Import with replace resets Home to the file's value; merge only sets it when the file has one. Import then clears a Home id whose favorite is missing.
+
 Each entry in `routes` includes the optional `speedProfileId` field (`Route.speedProfileId`), round-tripping the same way `FavoriteLocation.category` does. Old exports without it import cleanly — a missing or `null` `speedProfileId` defaults to `null`.
 
 Each entry in `routes` also includes `randomizeTeleportOrder` (`Route.randomizeTeleportOrder`). Old exports without it import cleanly — a missing field defaults to `false`.

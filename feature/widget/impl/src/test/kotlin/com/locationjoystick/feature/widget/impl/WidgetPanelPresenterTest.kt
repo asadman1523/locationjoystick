@@ -71,6 +71,7 @@ class WidgetPanelPresenterTest {
                 every { getFavoritesSortNewestFirst() } returns flowOf(true)
                 every { getRoutesSortMode() } returns flowOf(com.locationjoystick.core.model.SavedItemSortMode.NEWEST_FIRST)
                 every { getFavoritesSortMode() } returns flowOf(com.locationjoystick.core.model.SavedItemSortMode.NEWEST_FIRST)
+                every { getHomeFavoriteId() } returns flowOf(null)
                 every { getSpeedUnit() } returns flowOf(mockk(relaxed = true))
                 every { getRecentSearches() } returns flowOf(emptyList())
                 every { getRememberLastLocation() } returns flowOf(false)

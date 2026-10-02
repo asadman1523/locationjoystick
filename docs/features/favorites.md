@@ -63,6 +63,15 @@ is started with `FLAG_ACTIVITY_NEW_TASK` (`shareCurrentLocationCoordinates` in `
 Favorite detail in both the widget picker and its floating-map picker also supports Rename and
 Delete. Their dialogs stay inside the focusable overlay and return cleanly to the list after delete.
 
+## Home
+
+One favorite can be marked Home; the app then starts there instead of the last remembered location.
+
+- A tappable house icon (`HomeToggleButton`, shared by `FavoritesList` and the Favorites screen) toggles Home on the Favorites screen, the map favorites sheet and the widget favorites panel. The Favorites screen overflow menu has the same "Set as home" / "Remove home" item. The route-creator "Jump to Favorite" list and the widget's floating-map picker show no icon.
+- Only one Home. Marking another favorite moves the flag silently; tapping the active Home clears it.
+- Stored as one DataStore value (`HOME_FAVORITE_ID`, see docs/features/last-location.md), not a column on `FavoriteEntity`. A Home id whose favorite no longer exists resolves to nothing, so deleting the Home favorite falls back to the last location. Turning hot locations off (or an import that drops the favorite) clears the id.
+- Local startup preference: no Content API or Control API field. It round-trips through export/import (`ExportData.homeFavoriteId`).
+
 ## Storage
 
 `FavoriteEntity` flat table (no relations). Sort by `createdAt` descending by default; name and

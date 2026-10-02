@@ -58,6 +58,8 @@ internal fun FavoritesFloatingView(
     onShareOpened: () -> Unit = onDismiss,
     sortMode: SavedItemSortMode = SavedItemSortMode.NEWEST_FIRST,
     onSortModeSelected: (SavedItemSortMode) -> Unit = {},
+    homeFavoriteId: String? = null,
+    onToggleHome: ((FavoriteLocation) -> Unit)? = null,
 ) {
     var showAddForm by remember { mutableStateOf(false) }
     var newFavName by remember { mutableStateOf("") }
@@ -154,6 +156,8 @@ internal fun FavoritesFloatingView(
                 contentPadding = PaddingValues(0.dp),
                 enableSearch = false,
                 filterQuery = searchQuery,
+                homeFavoriteId = homeFavoriteId,
+                onToggleHome = onToggleHome,
                 cooldownBadgeText = { fav ->
                     cooldownBadgeText(
                         (cooldownStates[fav.id] as? CooldownState.Cooling)?.let { it.remainingSeconds to it.distanceMeters },

@@ -340,6 +340,7 @@ class MapControllerWalkCancellationTest {
                 every { getActiveSpeedProfile() } returns flowOf(walkProfile)
                 every { getRoutesSortMode() } returns flowOf(SavedItemSortMode.NEWEST_FIRST)
                 every { getFavoritesSortMode() } returns flowOf(SavedItemSortMode.NEWEST_FIRST)
+                every { getHomeFavoriteId() } returns flowOf(null)
                 every { getSpeedUnit() } returns flowOf(SpeedUnit.KMH)
                 every { getRecentSearches() } returns flowOf(emptyList())
                 every { getRoamingDefaults() } returns flowOf(RoamingDefaults())

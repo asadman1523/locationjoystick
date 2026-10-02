@@ -7,6 +7,8 @@
     <string name="favorite_target_detail_walk_via_roads">"沿道路步行"</string>
     <string name="favorite_target_detail_do_nothing">"不進行任何操作"</string>
     <string name="favorites_list_save_current_location_cd">"儲存目前位置"</string>
+    <string name="favorites_list_set_home_cd">"設為主頁位置"</string>
+    <string name="favorites_list_remove_home_cd">"取消主頁位置"</string>
     <string name="favorites_list_no_saved_favorites_yet">"尚無收藏"</string>
     <string name="delete_confirm_dialog_title">"刪除「%1$s」？"</string>
     <string name="delete_confirm_dialog_message_favorite">"此收藏將被永久刪除，且無法復原。"</string>

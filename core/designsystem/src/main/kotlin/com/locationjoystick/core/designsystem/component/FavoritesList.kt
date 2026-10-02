@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
@@ -49,6 +50,8 @@ import java.util.Locale
  * @param enableSearch When true, shows a search field and filters locally. Query is `remember`d
  *   (not saveable) so dismissing the host panel starts from the full list.
  * @param filterQuery Used only when [enableSearch] is false — parent-owned filter (widget picker).
+ * @param homeFavoriteId Id of the Home favorite, highlighted by its house icon.
+ * @param onToggleHome When non-null, each row shows a tappable house icon that calls this.
  */
 @Composable
 fun FavoritesList(
@@ -63,6 +66,8 @@ fun FavoritesList(
     textColor: Color = Color.Unspecified,
     enableSearch: Boolean = true,
     filterQuery: String = "",
+    homeFavoriteId: String? = null,
+    onToggleHome: ((FavoriteLocation) -> Unit)? = null,
 ) {
     var internalQuery by remember { mutableStateOf("") }
     val query = if (enableSearch) internalQuery else filterQuery
@@ -123,7 +128,7 @@ fun FavoritesList(
                 verticalArrangement = Arrangement.spacedBy(LjSpacing.sm),
             ) {
                 items(items = filtered, key = { it.id }) { favorite ->
-                    Column(
+                    Row(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -132,21 +137,45 @@ fun FavoritesList(
                                     MaterialTheme.shapes.small,
                                 ).clickable { onSelect(favorite) }
                                 .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(favorite.name, style = MaterialTheme.typography.titleMedium, color = textColor)
-                        Text(
-                            formatLatLng(favorite.position.latitude, favorite.position.longitude),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = textColor,
-                        )
-                        if (cooldownBadgeText != null) {
-                            Spacer(Modifier.height(6.dp))
-                            CooldownAdvisoryBadge(cooldownBadgeText(favorite))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(favorite.name, style = MaterialTheme.typography.titleMedium, color = textColor)
+                            Text(
+                                formatLatLng(favorite.position.latitude, favorite.position.longitude),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = textColor,
+                            )
+                            if (cooldownBadgeText != null) {
+                                Spacer(Modifier.height(6.dp))
+                                CooldownAdvisoryBadge(cooldownBadgeText(favorite))
+                            }
+                        }
+                        if (onToggleHome != null) {
+                            HomeToggleButton(isHome = favorite.id == homeFavoriteId, onClick = { onToggleHome(favorite) })
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/** Tappable house icon: primary when this favorite is Home, dimmed otherwise. */
+@Composable
+fun HomeToggleButton(
+    isHome: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(onClick = onClick, modifier = modifier.size(36.dp)) {
+        Icon(
+            LjIcons.Home,
+            contentDescription =
+                stringResource(if (isHome) R.string.favorites_list_remove_home_cd else R.string.favorites_list_set_home_cd),
+            tint = if (isHome) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 

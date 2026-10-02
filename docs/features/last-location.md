@@ -9,12 +9,14 @@ On app restart, restores the last spoofed position. No manual re-entry needed.
 | `REMEMBER_LAST_LOCATION` | `Boolean` | Feature toggle |
 | `LAST_LATITUDE` | `Double` | Last spoofed latitude |
 | `LAST_LONGITUDE` | `Double` | Last spoofed longitude |
+| `HOME_FAVORITE_ID` | `String?` | Id of the Home favorite (docs/features/favorites.md, "Home"); absent when none |
 
 ## Behaviour
 
-- On startup, with no position set yet: seed the initial position from `LAST_LATITUDE`/`LAST_LONGITUDE` when `REMEMBER_LAST_LOCATION` is `true` and valid coordinates exist; otherwise from the phone's real location (below); otherwise, with location permission granted, from `DEFAULT_LAT`/`DEFAULT_LON`, so the map always shows a point. Without permission the position stays unset and the next restore call retries.
+- On startup, with no position set yet: seed the initial position from the Home favorite when one is set and still exists (beats everything, even with `REMEMBER_LAST_LOCATION` on); otherwise from `LAST_LATITUDE`/`LAST_LONGITUDE` when `REMEMBER_LAST_LOCATION` is `true` and valid coordinates exist; otherwise from the phone's real location (below); otherwise, with location permission granted, from `DEFAULT_LAT`/`DEFAULT_LON`, so the map always shows a point. Without permission the position stays unset and the next restore call retries.
 - Real-location fallback (`RealLocationRepository.lastKnownRealPosition()`): the newest non-mock last-known fix across GPS and network providers. When none exists, the restore asks for one fresh fix (`getCurrentPosition()`, 10 s timeout) in the background. The default shows at once; the fresh fix then replaces it and the map follows, unless the position changed meanwhile (teleport, start). Read-only: not persisted, no cooldown, no teleport. It applies whether `REMEMBER_LAST_LOCATION` is on or off (the toggle gates only the saved position) and is skipped silently without location permission.
-- The Start button begins from the current position, then the stored last location (read directly, not gated by the toggle), then `DEFAULT_LAT`/`DEFAULT_LON`.
+- The Start button begins from the current position, then the Home favorite, then the stored last location (read directly, not gated by the toggle), then `DEFAULT_LAT`/`DEFAULT_LON`.
+- Group Sync: the restore only seeds when no position is set, and a follower bootstraps at the leader position (docs/features/group-sync.md), so the leader position takes over and Home does not apply.
 - The startup restore (`MapController.restoreLastLocationIfNeeded()`, called from `MapController.init` and
   the map screen) is single-flight: an overlapping call is a no-op, a call after a restore that found nothing
   retries.

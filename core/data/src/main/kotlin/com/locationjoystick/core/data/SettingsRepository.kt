@@ -206,6 +206,10 @@ class SettingsRepository
 
         suspend fun setLastLocation(location: LatLng) = dataSource.setLastLocation(location)
 
+        fun getHomeFavoriteId(): Flow<String?> = dataSource.getHomeFavoriteId()
+
+        suspend fun setHomeFavoriteId(id: String?) = dataSource.setHomeFavoriteId(id)
+
         fun getJitterIdleRadius(): Flow<Double> = dataSource.getJitterIdleRadius()
 
         fun getJitterMovingRadius(): Flow<Double> = dataSource.getJitterMovingRadius()

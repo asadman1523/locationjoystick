@@ -49,6 +49,7 @@ data class MapUiState(
     val enabledMapFeatures: Set<AppFeature> = AppFeature.DEFAULT_MAP_ENABLED,
     val cooldownState: CooldownState = CooldownState.Ready,
     val favoriteCooldownStates: Map<String, CooldownState> = emptyMap(),
+    val homeFavoriteId: String? = null,
     val isPendingTapSheetOpen: Boolean = false,
     val hideTeleportFeatures: Boolean = false,
     val mapTileSource: MapTileSource = MapTileSource.DEFAULT,

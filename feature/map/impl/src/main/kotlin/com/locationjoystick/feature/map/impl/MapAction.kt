@@ -30,6 +30,10 @@ sealed interface MapAction {
 
     data object DeselectFavorite : MapAction
 
+    data class ToggleHomeFavorite(
+        val favorite: FavoriteLocation,
+    ) : MapAction
+
     data object CameraTargetConsumed : MapAction
 
     data class SetLocationTo(

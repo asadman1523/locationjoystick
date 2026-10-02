@@ -85,6 +85,15 @@ class SettingsExportCodecTest {
     }
 
     @Test
+    fun `round-trip preserves home favorite id and old exports have none`() {
+        val json = SettingsExportCodec.serializeExportData(minimalExportData().copy(homeFavoriteId = "fav1"))
+        assertEquals("fav1", SettingsExportCodec.parseExportData(json).homeFavoriteId)
+
+        val legacy = JSONObject(json).apply { remove("homeFavoriteId") }.toString()
+        assertEquals(null, SettingsExportCodec.parseExportData(legacy).homeFavoriteId)
+    }
+
+    @Test
     fun `legacy sort booleans migrate to saved-time modes`() {
         val json =
             JSONObject(SettingsExportCodec.serializeExportData(minimalExportData()))

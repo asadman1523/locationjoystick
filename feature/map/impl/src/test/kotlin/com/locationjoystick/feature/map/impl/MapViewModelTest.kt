@@ -122,6 +122,7 @@ class MapViewModelTest {
             flowOf(SpeedProfile(id = "walk", name = "Walk", speedMetersPerSecond = 1.39))
         every { settingsRepository.getRememberLastLocation() } returns flowOf(false)
         every { settingsRepository.getLastLocation() } returns flowOf(null)
+        every { settingsRepository.getHomeFavoriteId() } returns flowOf(null)
         every { settingsRepository.getLastTeleportTime() } returns flowOf(0L)
         every { settingsRepository.getHideTeleportFeatures() } returns flowOf(false)
         every { settingsRepository.getShowRouteJumpButtons() } returns flowOf(false)

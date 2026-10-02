@@ -9,4 +9,5 @@ data class FavoritesUiState(
     val pendingDeleteId: String? = null,
     val sortMode: SavedItemSortMode = SavedItemSortMode.NEWEST_FIRST,
     val hideTeleportFeatures: Boolean = false,
+    val homeFavoriteId: String? = null,
 )

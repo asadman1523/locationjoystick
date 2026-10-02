@@ -149,6 +149,8 @@ internal fun FavoritesPickerSheet(
                 title = stringResource(R.string.map_bottom_sheets_favorites),
                 favorites = uiState.favorites,
                 onSelect = { onAction(MapAction.SelectFavorite(it)) },
+                homeFavoriteId = uiState.homeFavoriteId,
+                onToggleHome = { onAction(MapAction.ToggleHomeFavorite(it)) },
                 onSaveCurrentLocation =
                     if (uiState.currentPosition != null) {
                         { showSaveDialog = true }

@@ -51,7 +51,8 @@ private fun parseAppFeature(raw: String): AppFeature? =
  *   "favoriteLocations": [ ... ],
  *   "jitterIdleRadius": 0.5,
  *   "jitterMovingRadius": 1.5,
- *   "jitterMaxStepMeters": 1.0
+ *   "jitterMaxStepMeters": 1.0,
+ *   "homeFavoriteId": "optional id of the Home favorite"
  * }
  * ```
  *
@@ -168,6 +169,7 @@ internal object SettingsExportCodec {
         root.put("favoritesSortNewestFirst", data.favoritesSortNewestFirst)
         root.put("routesSortMode", data.routesSortMode.name)
         root.put("favoritesSortMode", data.favoritesSortMode.name)
+        data.homeFavoriteId?.let { root.put("homeFavoriteId", it) }
 
         return root.toString()
     }
@@ -440,6 +442,7 @@ internal object SettingsExportCodec {
                     root.optString("favoritesSortMode"),
                     root.optBoolean("favoritesSortNewestFirst", true),
                 ),
+            homeFavoriteId = if (root.isNull("homeFavoriteId")) null else root.optString("homeFavoriteId").ifBlank { null },
         )
     }
 }

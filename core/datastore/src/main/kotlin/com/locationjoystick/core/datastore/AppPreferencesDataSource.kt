@@ -146,6 +146,12 @@ interface PreferencesDataSource {
     /** Sets the last spoofed location. */
     suspend fun setLastLocation(location: LatLng)
 
+    /** Gets the id of the favorite marked Home (app start point), or null. */
+    fun getHomeFavoriteId(): Flow<String?>
+
+    /** Sets the Home favorite id; null clears it. */
+    suspend fun setHomeFavoriteId(id: String?)
+
     /** Gets the GPS jitter radius when idle (meters). */
     fun getJitterIdleRadius(): Flow<Double>
 
@@ -547,6 +553,7 @@ class AppPreferencesDataSource
             val REMEMBER_LAST_LOCATION = booleanPreferencesKey("remember_last_location")
             val LAST_LATITUDE = doublePreferencesKey("last_latitude")
             val LAST_LONGITUDE = doublePreferencesKey("last_longitude")
+            val HOME_FAVORITE_ID = stringPreferencesKey("home_favorite_id")
             val JITTER_IDLE_RADIUS_METERS = doublePreferencesKey("jitter_idle_radius_meters")
             val JITTER_MOVING_RADIUS_METERS = doublePreferencesKey("jitter_moving_radius_meters")
             val JITTER_MAX_STEP_METERS = doublePreferencesKey("jitter_max_step_meters")
@@ -803,6 +810,23 @@ class AppPreferencesDataSource
             dataStore.edit { prefs ->
                 prefs[Keys.LAST_LATITUDE] = location.latitude
                 prefs[Keys.LAST_LONGITUDE] = location.longitude
+            }
+        }
+
+        override fun getHomeFavoriteId(): Flow<String?> =
+            dataStore.data
+                .catch { e ->
+                    if (e is IOException) {
+                        Log.e(TAG, "Error reading home favorite preference", e)
+                        emit(emptyPreferences())
+                    } else {
+                        throw e
+                    }
+                }.map { prefs -> prefs[Keys.HOME_FAVORITE_ID] }
+
+        override suspend fun setHomeFavoriteId(id: String?) {
+            dataStore.edit { prefs ->
+                if (id == null) prefs.remove(Keys.HOME_FAVORITE_ID) else prefs[Keys.HOME_FAVORITE_ID] = id
             }
         }
 
