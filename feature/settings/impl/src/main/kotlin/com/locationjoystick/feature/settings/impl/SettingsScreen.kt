@@ -408,6 +408,10 @@ fun SettingsRoute(
                     viewModel.setCapturePreviousBrowserPackage(action.packageName)
                 }
 
+                is SettingsAction.SetLaunchAfterLinkPackage -> {
+                    viewModel.setLaunchAfterLinkPackage(action.packageName)
+                }
+
                 is SettingsAction.SetTapToWalkOverlayEnabled -> {
                     viewModel.setTapToWalkOverlayEnabled(action.enabled)
                 }

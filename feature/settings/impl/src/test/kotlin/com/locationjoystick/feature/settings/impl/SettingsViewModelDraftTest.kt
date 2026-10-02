@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -324,6 +325,17 @@ class SettingsViewModelDraftTest {
             backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }
             viewModel.setCapturePreviousBrowserPackage("com.example.browser")
             assertEquals("com.example.browser", viewModel.uiState.value.capturePreviousBrowserPackage)
+        }
+
+    @Test
+    fun `setLaunchAfterLinkPackage persists without marking dirty`() =
+        runTest(testDispatcher) {
+            backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }
+            viewModel.setLaunchAfterLinkPackage("com.example.game")
+            assertEquals("com.example.game", viewModel.uiState.value.launchAfterLinkPackage)
+            assertFalse(viewModel.uiState.value.isDirty)
+            viewModel.setLaunchAfterLinkPackage(null)
+            assertNull(viewModel.uiState.value.launchAfterLinkPackage)
         }
 
     // -------------------------------------------------------------------------

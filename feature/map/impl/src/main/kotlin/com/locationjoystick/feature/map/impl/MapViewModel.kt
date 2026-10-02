@@ -8,6 +8,7 @@ import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.CooldownState
 import com.locationjoystick.core.data.DeepLinkRepository
 import com.locationjoystick.core.data.GpxOpenRepository
+import com.locationjoystick.core.data.LaunchAfterLinkUseCase
 import com.locationjoystick.core.data.RoamingRepository
 import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.data.TeleportUseCase
@@ -53,7 +54,11 @@ class MapViewModel
         private val teleportUseCase: TeleportUseCase,
         private val settingsRepository: SettingsRepository,
         private val captureCoordinatesRepository: CaptureCoordinatesRepository,
+        private val launchAfterLinkUseCase: LaunchAfterLinkUseCase,
     ) : ViewModel() {
+        /** Pin that came from an intercepted/deep link; confirming it opens the user's chosen app. */
+        private var linkPinnedTarget: LatLng? = null
+
         private val _uiState = MutableStateFlow(MapUiState())
         val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
@@ -189,7 +194,7 @@ class MapViewModel
         private fun observeDeepLinkCoords() {
             viewModelScope.launch {
                 deepLinkRepository.pendingCoords.collect { coords ->
-                    pinCoordinateTarget(coords)
+                    pinCoordinateTarget(coords, fromLink = true)
                     deepLinkRepository.consume()
                 }
             }
@@ -236,6 +241,7 @@ class MapViewModel
 
                 is MapAction.ConfirmTeleport -> {
                     mapController.teleportTo(action.position)
+                    launchAfterLinkIfPinned(action.position)
                     _uiState.update { it.copy(pendingTapPosition = null, isPendingTapSheetOpen = false) }
                 }
 
@@ -244,12 +250,14 @@ class MapViewModel
                 }
 
                 MapAction.ClearPinnedPoint -> {
+                    linkPinnedTarget = null
                     _uiState.update { it.copy(pendingTapPosition = null, isPendingTapSheetOpen = false) }
                 }
 
                 is MapAction.StopRouteAndTeleport -> {
                     mapController.stopRouteOnly()
                     mapController.teleportTo(action.position)
+                    launchAfterLinkIfPinned(action.position)
                     _uiState.update { it.copy(pendingTapPosition = null, isPendingTapSheetOpen = false) }
                 }
 
@@ -262,11 +270,13 @@ class MapViewModel
                 is MapAction.LongPressTapToWalk -> {
                     _uiState.update { it.copy(roamingPreviewWaypoints = null) }
                     mapController.walkTo(action.position)
+                    launchAfterLinkIfPinned(action.position)
                 }
 
                 is MapAction.WalkViaRoadsTo -> {
                     _uiState.update { it.copy(roamingPreviewWaypoints = null) }
                     mapController.walkViaRoads(action.position)
+                    launchAfterLinkIfPinned(action.position)
                 }
 
                 is MapAction.WalkStraightTo -> {
@@ -277,11 +287,13 @@ class MapViewModel
                 is MapAction.StopRouteAndWalkTo -> {
                     mapController.stopRouteOnly()
                     mapController.walkTo(action.position)
+                    launchAfterLinkIfPinned(action.position)
                     _uiState.update { it.copy(pendingTapPosition = null, isPendingTapSheetOpen = false) }
                 }
 
                 is MapAction.FinishRouteAndWalkTo -> {
                     mapController.appendWaypointToRoute(action.position)
+                    launchAfterLinkIfPinned(action.position)
                     _uiState.update { it.copy(pendingTapPosition = null, isPendingTapSheetOpen = false) }
                 }
 
@@ -629,8 +641,12 @@ class MapViewModel
             hidePasteCoordinatesSheet()
         }
 
-        private fun pinCoordinateTarget(coords: LatLng) {
+        private fun pinCoordinateTarget(
+            coords: LatLng,
+            fromLink: Boolean = false,
+        ) {
             gpxOpenRepository.consume()
+            linkPinnedTarget = coords.takeIf { fromLink }
             _uiState.update {
                 it.copy(
                     pendingTapPosition = coords,
@@ -640,6 +656,12 @@ class MapViewModel
                     roamingPreviewWaypoints = null,
                 )
             }
+        }
+
+        private fun launchAfterLinkIfPinned(position: LatLng) {
+            if (position != linkPinnedTarget) return
+            linkPinnedTarget = null
+            viewModelScope.launch { launchAfterLinkUseCase.launch() }
         }
 
         private fun handleTapToTeleport(position: LatLng) {

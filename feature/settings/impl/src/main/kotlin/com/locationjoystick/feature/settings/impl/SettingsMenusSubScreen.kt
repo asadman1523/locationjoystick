@@ -151,7 +151,7 @@ internal fun SettingsMenusSubScreen(
                         Spacer(Modifier.height(24.dp))
                         PrivacySection(uiState, onAction)
                         Spacer(Modifier.height(24.dp))
-                        CaptureSection(uiState, onAction)
+                        CaptureSection(uiState, onAction, launchableApps)
                         Spacer(Modifier.height(24.dp))
                         DebugSection(uiState, onAction)
                     }
@@ -448,7 +448,10 @@ private fun PrivacySection(
 private fun CaptureSection(
     uiState: SettingsUiState,
     onAction: (SettingsAction) -> Unit,
+    launchableApps: List<InstalledApp>,
 ) {
+    var launchPickerExpanded by remember { mutableStateOf(false) }
+    val launchApp = launchableApps.find { it.packageName == uiState.launchAfterLinkPackage }
     val context = LocalContext.current
     val browserChoices = remember(context) { captureBrowserChoices(context) }
     val preferredBrowserPackage = resolvePreferredBrowserPackage(uiState.capturePreviousBrowserPackage, context.packageName)
@@ -484,6 +487,35 @@ private fun CaptureSection(
                     onOpenSetupGuide = {},
                 ),
         )
+        Box {
+            LjOutlinedButton(onClick = { launchPickerExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    stringResource(
+                        R.string.settings_menus_capture_launch_after,
+                        launchApp?.label ?: stringResource(R.string.settings_menus_capture_launch_after_none),
+                    ),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            DropdownMenu(expanded = launchPickerExpanded, onDismissRequest = { launchPickerExpanded = false }) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.settings_menus_capture_launch_after_none)) },
+                    onClick = {
+                        onAction(SettingsAction.SetLaunchAfterLinkPackage(null))
+                        launchPickerExpanded = false
+                    },
+                )
+                launchableApps.forEach { app ->
+                    DropdownMenuItem(
+                        text = { Text(app.label) },
+                        onClick = {
+                            onAction(SettingsAction.SetLaunchAfterLinkPackage(app.packageName))
+                            launchPickerExpanded = false
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 

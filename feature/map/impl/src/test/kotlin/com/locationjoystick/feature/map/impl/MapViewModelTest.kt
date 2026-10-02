@@ -6,6 +6,7 @@ import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.DeepLinkRepository
 import com.locationjoystick.core.data.FavoriteRepository
 import com.locationjoystick.core.data.GpxOpenRepository
+import com.locationjoystick.core.data.LaunchAfterLinkUseCase
 import com.locationjoystick.core.data.LocationRepository
 import com.locationjoystick.core.data.RealLocationRepository
 import com.locationjoystick.core.data.RoamingRepository
@@ -70,6 +71,7 @@ class MapViewModelTest {
     private lateinit var deepLinkRepository: DeepLinkRepository
     private lateinit var gpxOpenRepository: GpxOpenRepository
     private lateinit var captureCoordinatesRepository: CaptureCoordinatesRepository
+    private lateinit var launchAfterLinkUseCase: LaunchAfterLinkUseCase
     private lateinit var realLocationRepository: RealLocationRepository
     private lateinit var mapController: MapController
     private lateinit var viewModel: MapViewModel
@@ -98,6 +100,7 @@ class MapViewModelTest {
         deepLinkRepository = mockk(relaxed = true)
         gpxOpenRepository = GpxOpenRepository()
         captureCoordinatesRepository = CaptureCoordinatesRepository(FakePreferencesDataStore())
+        launchAfterLinkUseCase = mockk(relaxed = true)
         realLocationRepository = mockk(relaxed = true)
         coEvery { realLocationRepository.getCurrentPosition() } returns Result.failure(IllegalStateException("No GPS"))
         every { realLocationRepository.lastKnownRealPosition() } returns null
@@ -160,6 +163,7 @@ class MapViewModelTest {
             teleportUseCase = teleportUseCase,
             settingsRepository = settingsRepository,
             captureCoordinatesRepository = captureCoordinatesRepository,
+            launchAfterLinkUseCase = launchAfterLinkUseCase,
         )
     }
 
@@ -203,6 +207,65 @@ class MapViewModelTest {
             viewModel.onAction(MapAction.ConfirmTeleport(position))
 
             assertNull(viewModel.uiState.value.pendingTapPosition)
+        }
+
+    @Test
+    fun `confirmTeleport_afterLinkPin_launchesAfterLinkAppOnce`() =
+        runTest {
+            val position = LatLng(48.8566, 2.3522)
+            every { deepLinkRepository.pendingCoords } returns flowOf(position)
+            viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onAction(MapAction.ConfirmTeleport(position))
+            viewModel.onAction(MapAction.ConfirmTeleport(position))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { launchAfterLinkUseCase.launch() }
+        }
+
+    @Test
+    fun `confirmTeleport_afterTapPin_doesNotLaunchAfterLinkApp`() =
+        runTest {
+            every { locationRepository.mockLocationState } returns MutableStateFlow(MockLocationState.RUNNING)
+            viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+            val position = LatLng(48.8566, 2.3522)
+
+            viewModel.onAction(MapAction.TapToTeleport(position))
+            viewModel.onAction(MapAction.ConfirmTeleport(position))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 0) { launchAfterLinkUseCase.launch() }
+        }
+
+    @Test
+    fun `confirmTeleport_afterLinkPinCleared_doesNotLaunchAfterLinkApp`() =
+        runTest {
+            val position = LatLng(48.8566, 2.3522)
+            every { deepLinkRepository.pendingCoords } returns flowOf(position)
+            viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onAction(MapAction.ClearPinnedPoint)
+            viewModel.onAction(MapAction.ConfirmTeleport(position))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 0) { launchAfterLinkUseCase.launch() }
+        }
+
+    @Test
+    fun `walkViaRoads_afterLinkPin_launchesAfterLinkApp`() =
+        runTest {
+            val position = LatLng(48.8566, 2.3522)
+            every { deepLinkRepository.pendingCoords } returns flowOf(position)
+            viewModel = createViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onAction(MapAction.WalkViaRoadsTo(position))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { launchAfterLinkUseCase.launch() }
         }
 
     @Test

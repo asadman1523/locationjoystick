@@ -32,6 +32,7 @@ class CaptureCoordinatesRepository
             val CAPTURE_POINTS = stringPreferencesKey(AppConstants.DataStoreConstants.KEY_CAPTURE_POINTS)
             val PREVIOUS_BROWSER = stringPreferencesKey(AppConstants.DataStoreConstants.KEY_CAPTURE_PREVIOUS_BROWSER)
             val SETUP_RESET = booleanPreferencesKey(AppConstants.DataStoreConstants.KEY_CAPTURE_SETUP_RESET)
+            val LAUNCH_AFTER_PACKAGE = stringPreferencesKey(AppConstants.DataStoreConstants.KEY_CAPTURE_LAUNCH_AFTER_PACKAGE)
             val HELPER_OPEN = booleanPreferencesKey(AppConstants.DataStoreConstants.KEY_CAPTURE_HELPER_OPEN)
         }
 
@@ -81,6 +82,17 @@ class CaptureCoordinatesRepository
 
         val previousBrowserPackage: Flow<String?> =
             safeData.map { prefs -> prefs[Keys.PREVIOUS_BROWSER]?.takeIf { it.isNotBlank() } }
+
+        /** App to open after a handled map link; null means none. Survives [resetSetup]. */
+        val launchAfterLinkPackage: Flow<String?> =
+            safeData.map { prefs -> prefs[Keys.LAUNCH_AFTER_PACKAGE]?.takeIf { it.isNotBlank() } }
+
+        suspend fun setLaunchAfterLinkPackage(packageName: String?) {
+            val trimmed = packageName?.trim().orEmpty()
+            dataStore.edit { prefs ->
+                if (trimmed.isEmpty()) prefs.remove(Keys.LAUNCH_AFTER_PACKAGE) else prefs[Keys.LAUNCH_AFTER_PACKAGE] = trimmed
+            }
+        }
 
         suspend fun setCaptureEnabled(enabled: Boolean) {
             dataStore.edit { prefs -> prefs[Keys.CAPTURE_ENABLED] = enabled }

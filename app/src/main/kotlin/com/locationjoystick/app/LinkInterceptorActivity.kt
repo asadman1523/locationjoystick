@@ -21,6 +21,7 @@ import com.locationjoystick.core.common.util.shouldPinForConfirmSheet
 import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.DeepLinkRepository
 import com.locationjoystick.core.data.GoogleMapsShortLinkResolver
+import com.locationjoystick.core.data.LaunchAfterLinkUseCase
 import com.locationjoystick.core.data.TeleportUseCase
 import com.locationjoystick.core.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,6 +38,8 @@ class LinkInterceptorActivity : ComponentActivity() {
     @Inject lateinit var teleportUseCase: TeleportUseCase
 
     @Inject lateinit var deepLinkRepository: DeepLinkRepository
+
+    @Inject lateinit var launchAfterLinkUseCase: LaunchAfterLinkUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +89,7 @@ class LinkInterceptorActivity : ComponentActivity() {
                         getString(R.string.link_interceptor_jumped_to, formatCapturedPoint(point)),
                         Toast.LENGTH_SHORT,
                     ).show()
+                launchAfterLinkUseCase.launch()
             }
             CaptureLinkDecision.CAPTURE_AND_JUMP -> {
                 val point = LatLng(coords!!.first, coords.second)
@@ -97,6 +101,7 @@ class LinkInterceptorActivity : ComponentActivity() {
                         getString(R.string.link_interceptor_captured_and_jumped_to, formatCapturedPoint(point)),
                         Toast.LENGTH_SHORT,
                     ).show()
+                launchAfterLinkUseCase.launch()
             }
             CaptureLinkDecision.FORWARD ->
                 if (shouldPinForConfirmSheet(captureModeEnabled, coords)) {

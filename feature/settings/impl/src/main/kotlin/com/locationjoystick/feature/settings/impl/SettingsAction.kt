@@ -176,6 +176,10 @@ internal sealed class SettingsAction {
         val packageName: String,
     ) : SettingsAction()
 
+    data class SetLaunchAfterLinkPackage(
+        val packageName: String?,
+    ) : SettingsAction()
+
     data class SetTapToWalkOverlayEnabled(
         val enabled: Boolean,
     ) : SettingsAction()

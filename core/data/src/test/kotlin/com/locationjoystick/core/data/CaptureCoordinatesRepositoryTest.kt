@@ -36,6 +36,19 @@ class CaptureCoordinatesRepositoryTest {
         }
 
     @Test
+    fun `launch-after-link package round-trips and clears`() =
+        runTest {
+            assertNull(repository.launchAfterLinkPackage.first())
+            repository.setLaunchAfterLinkPackage(" pogo ")
+            assertEquals("pogo", repository.launchAfterLinkPackage.first())
+            repository.setLaunchAfterLinkPackage(null)
+            assertNull(repository.launchAfterLinkPackage.first())
+            repository.setLaunchAfterLinkPackage("pogo")
+            repository.setLaunchAfterLinkPackage(" ")
+            assertNull(repository.launchAfterLinkPackage.first())
+        }
+
+    @Test
     fun `setCaptureEnabled round-trips`() =
         runTest {
             repository.setCaptureEnabled(true)

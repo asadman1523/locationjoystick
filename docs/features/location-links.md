@@ -51,7 +51,7 @@ When the link is opened:
 3. Map pans to the coordinate.
 4. Confirmation sheet appears: Teleport / Walk here / Walk via roads / Do nothing.
 
-The coordinate is never acted on automatically — the user must confirm.
+The coordinate is never acted on automatically — the user must confirm. Confirming Teleport / Walk also opens the app chosen under "Launch Another App After a Link", if any.
 
 If the link's coordinates can't be parsed or no URL/coordinates can be extracted from the shared text, a snackbar reading "Couldn't open that link" is shown instead of silently doing nothing.
 
@@ -157,6 +157,12 @@ Captured points are listed in an orange-outlined read-only box, skipping exact d
 
 **Restore default browser** (top-bar three-dot menu) clears Capture mode, List, and Jump, and opens Android's Default apps settings so the user can restore their usual browser. It sets a per-device flag so the setup cards return even though the app still holds the browser role. Captured points, the pass-through browser, and the stored previous browser holder are kept (Android will not reassign the previous browser back programmatically). The flag clears when the user taps the default-browser card again or when this app is no longer the default browser.
 
+### Launch Another App After a Link
+
+**Settings > Menus > Capture > After a map link, open** picks an installed launchable app (default: None). After any handled link — a Capture Jump teleport in `LinkInterceptorActivity`, or Teleport / Walk / Walk via roads confirmed on the confirm sheet for a link-pinned point — `LaunchAfterLinkUseCase` starts that app so focus returns to the game instead of staying here. Capture-only (List) and "Do nothing" never launch. A missing, disabled or self-package target is a silent no-op (logged). Tap-to-teleport and pasted coordinates never launch: `MapViewModel` only arms the launch for a pin that came from `observeDeepLinkCoords`.
+
+The package is stored per-device in DataStore (`CaptureCoordinatesRepository.launchAfterLinkPackage`), is not in `ExportData`, and survives **Restore default browser**. The picker lists apps through the existing `MAIN`/`LAUNCHER` `<queries>` entry in the manifest; no `QUERY_ALL_PACKAGES`.
+
 ## Implementation
 
 | Layer | Detail |
@@ -169,4 +175,5 @@ Captured points are listed in an orange-outlined read-only box, skipping exact d
 | **Capture Manifest** | Intent filters on `LinkInterceptorActivity`: catch-all `http`/`https` VIEW + BROWSABLE, and Google Maps hosts |
 | **Capture Intercept** | `LinkInterceptorActivity.kt`, `CaptureCoordinatesRepository.kt` (`:core:data`) |
 | **Capture UI** | `CaptureCoordinatesForm` (`:core:designsystem`, shared with onboarding cards) + `SettingsMenusSubScreen` (`:feature:settings:impl`) |
+| **Launch after link** | `LaunchAfterLinkUseCase` (`:core:data`), called by `LinkInterceptorActivity` and `MapViewModel` |
 | **Capture List** | `CaptureCoordinatesViewModel.kt` (`:feature:map:impl`), `CaptureLink.kt` (`:core:common/util`) |

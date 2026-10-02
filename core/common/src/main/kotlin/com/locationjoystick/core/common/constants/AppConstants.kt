@@ -377,6 +377,7 @@ object AppConstants {
         const val KEY_CAPTURE_PREVIOUS_BROWSER = "capture_coordinates_previous_browser"
         const val KEY_CAPTURE_SETUP_RESET = "capture_coordinates_setup_reset"
         const val KEY_CAPTURE_HELPER_OPEN = "capture_coordinates_helper_open"
+        const val KEY_CAPTURE_LAUNCH_AFTER_PACKAGE = "capture_coordinates_launch_after_package"
     }
 
     object CooldownConstants {

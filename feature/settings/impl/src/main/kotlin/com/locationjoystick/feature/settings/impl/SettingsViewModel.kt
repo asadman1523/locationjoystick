@@ -101,6 +101,7 @@ class SettingsViewModel
             val captureEnabled: Boolean,
             val jumpEnabled: Boolean,
             val previousBrowserPackage: String?,
+            val launchAfterLinkPackage: String?,
         )
 
         private val captureSnapshot: Flow<CaptureSnapshot> =
@@ -109,8 +110,9 @@ class SettingsViewModel
                 captureCoordinatesRepository.captureEnabled,
                 captureCoordinatesRepository.jumpEnabled,
                 captureCoordinatesRepository.previousBrowserPackage,
-            ) { modeEnabled, captureEnabled, jumpEnabled, previousBrowserPackage ->
-                CaptureSnapshot(modeEnabled, captureEnabled, jumpEnabled, previousBrowserPackage)
+                captureCoordinatesRepository.launchAfterLinkPackage,
+            ) { modeEnabled, captureEnabled, jumpEnabled, previousBrowserPackage, launchAfterLinkPackage ->
+                CaptureSnapshot(modeEnabled, captureEnabled, jumpEnabled, previousBrowserPackage, launchAfterLinkPackage)
             }
 
         init {
@@ -271,6 +273,7 @@ class SettingsViewModel
                     captureEnabled = capture.captureEnabled,
                     jumpEnabled = capture.jumpEnabled,
                     capturePreviousBrowserPackage = capture.previousBrowserPackage,
+                    launchAfterLinkPackage = capture.launchAfterLinkPackage,
                     compassTestTargetPackage = compassTestTargetPackage,
                     isCompassServiceGranted = isServiceGranted,
                     compassDisclosureAnswered =
@@ -470,6 +473,10 @@ class SettingsViewModel
 
         fun setCapturePreviousBrowserPackage(packageName: String) {
             viewModelScope.launch { captureCoordinatesRepository.setPreviousBrowserPackage(packageName) }
+        }
+
+        fun setLaunchAfterLinkPackage(packageName: String?) {
+            viewModelScope.launch { captureCoordinatesRepository.setLaunchAfterLinkPackage(packageName) }
         }
 
         fun setTapToWalkOverlayEnabled(enabled: Boolean) {

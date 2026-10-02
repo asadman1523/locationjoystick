@@ -53,5 +53,6 @@ data class SettingsUiState(
     val captureEnabled: Boolean = false,
     val jumpEnabled: Boolean = false,
     val capturePreviousBrowserPackage: String? = null,
+    val launchAfterLinkPackage: String? = null,
     val isDirty: Boolean = false,
 )
