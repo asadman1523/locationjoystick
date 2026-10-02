@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cooldown_time_hours_minutes">"%1$dh %2$dm"</string>
+    <string name="cooldown_time_minutes_seconds">"%1$dm %2$ds"</string>
+    <string name="cooldown_time_seconds">"%1$ds"</string>
+    <string name="cooldown_distance_km">"%1$.1f km"</string>
+    <string name="cooldown_distance_m">"%1$.0f m"</string>
+    <string name="cooldown_advisory_label">"%1$s · %2$s 傳送"</string>
+    <string name="cooldown_badge_suggested_wait">"建議等待：%1$s"</string>
+    <string name="cooldown_badge_distance_away">"距離 %1$s"</string>
+    <string name="cooldown_badge_no_wait">"無需等待"</string>
+</resources>

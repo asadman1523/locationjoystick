@@ -59,6 +59,8 @@ import com.locationjoystick.core.designsystem.component.NominatimSearchBar
 import com.locationjoystick.core.designsystem.component.PasteCoordinatesForm
 import com.locationjoystick.core.designsystem.component.RoamingSheetContent
 import com.locationjoystick.core.designsystem.component.RouteProgressBadgeInMapFabSlot
+import com.locationjoystick.core.designsystem.component.cooldownAdvisoryLabel
+import com.locationjoystick.core.designsystem.component.rememberCooldownStringLookup
 import com.locationjoystick.core.designsystem.component.routeProgressStopContentDescription
 import com.locationjoystick.core.map.geojson.buildLineGeoJson
 import com.locationjoystick.core.map.geojson.buildPointsGeoJson
@@ -899,7 +901,8 @@ private fun BoxScope.TapActionPanel(
             }.collectAsStateWithLifecycle(initialValue = CooldownState.Ready)
             Spacer(Modifier.height(8.dp))
             CooldownAdvisoryBadge(
-                (cooldownState as? CooldownState.Cooling)?.toAdvisoryLabel()
+                (cooldownState as? CooldownState.Cooling)
+                    ?.let { cooldownAdvisoryLabel(it.remainingSeconds, it.distanceMeters, rememberCooldownStringLookup()) }
                     ?: stringResource(R.string.map_floating_no_wait_needed),
             )
             Spacer(Modifier.height(16.dp))

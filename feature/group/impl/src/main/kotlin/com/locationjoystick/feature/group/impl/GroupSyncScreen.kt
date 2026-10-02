@@ -50,8 +50,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.locationjoystick.core.common.util.haversineDistance
 import com.locationjoystick.core.data.CooldownState
-import com.locationjoystick.core.data.toBadgeText
 import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.component.CooldownAdvisoryBadge
 import com.locationjoystick.core.designsystem.component.LjButton
@@ -60,6 +60,8 @@ import com.locationjoystick.core.designsystem.component.LjPrimaryButton
 import com.locationjoystick.core.designsystem.component.LjScaffold
 import com.locationjoystick.core.designsystem.component.LjTextButton
 import com.locationjoystick.core.designsystem.component.WideContentClamp
+import com.locationjoystick.core.designsystem.component.cooldownBadgeText
+import com.locationjoystick.core.designsystem.component.rememberCooldownStringLookup
 import com.locationjoystick.core.designsystem.component.writePlainText
 import com.locationjoystick.core.location.rememberSpoofToggleState
 import com.locationjoystick.core.model.GroupRole
@@ -543,7 +545,13 @@ private fun FollowerContent(
 
         if (groupState.followerModeEnabled && !hideTeleportFeatures) {
             leaderPosition?.let { leaderPos ->
-                CooldownAdvisoryBadge(cooldownState.toBadgeText(currentPosition, leaderPos))
+                CooldownAdvisoryBadge(
+                    cooldownBadgeText(
+                        (cooldownState as? CooldownState.Cooling)?.let { it.remainingSeconds to it.distanceMeters },
+                        currentPosition?.let { haversineDistance(it, leaderPos) },
+                        rememberCooldownStringLookup(),
+                    ),
+                )
             }
             LjOutlinedButton(
                 onClick = onTeleportToLeaderNow,

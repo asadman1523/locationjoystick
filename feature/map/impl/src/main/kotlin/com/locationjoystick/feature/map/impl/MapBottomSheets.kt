@@ -30,8 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.locationjoystick.core.common.util.haversineDistance
 import com.locationjoystick.core.data.CooldownState
-import com.locationjoystick.core.data.toBadgeText
 import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.component.CooldownAdvisoryBadge
 import com.locationjoystick.core.designsystem.component.FavoriteTargetDetail
@@ -42,6 +42,9 @@ import com.locationjoystick.core.designsystem.component.LjTextButton
 import com.locationjoystick.core.designsystem.component.PasteCoordinatesForm
 import com.locationjoystick.core.designsystem.component.RouteStartSheetContent
 import com.locationjoystick.core.designsystem.component.RoutesPickerList
+import com.locationjoystick.core.designsystem.component.cooldownAdvisoryLabel
+import com.locationjoystick.core.designsystem.component.cooldownBadgeText
+import com.locationjoystick.core.designsystem.component.rememberCooldownStringLookup
 import com.locationjoystick.core.designsystem.component.rememberLjSheetState
 import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.RouteStartConfig
@@ -133,6 +136,7 @@ internal fun FavoritesPickerSheet(
     onAction: (MapAction) -> Unit,
 ) {
     var showSaveDialog by remember { mutableStateOf(false) }
+    val getString = rememberCooldownStringLookup()
 
     ModalBottomSheet(
         onDismissRequest = { onAction(MapAction.CloseFavoritesPicker) },
@@ -152,8 +156,12 @@ internal fun FavoritesPickerSheet(
                         null
                     },
                 cooldownBadgeText = { fav ->
-                    (uiState.favoriteCooldownStates[fav.id] ?: CooldownState.Ready)
-                        .toBadgeText(uiState.currentPosition, fav.position)
+                    cooldownBadgeText(
+                        (uiState.favoriteCooldownStates[fav.id] as? CooldownState.Cooling)
+                            ?.let { it.remainingSeconds to it.distanceMeters },
+                        uiState.currentPosition?.let { haversineDistance(it, fav.position) },
+                        getString,
+                    )
                 },
             )
         } else {
@@ -277,7 +285,8 @@ internal fun PendingTapSheet(
                 Text(stringResource(R.string.map_sheet_move_to_this_location), style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.height(12.dp))
                 CooldownAdvisoryBadge(
-                    (cooldownState as? CooldownState.Cooling)?.toAdvisoryLabel()
+                    (cooldownState as? CooldownState.Cooling)
+                        ?.let { cooldownAdvisoryLabel(it.remainingSeconds, it.distanceMeters, rememberCooldownStringLookup()) }
                         ?: stringResource(R.string.map_sheet_no_wait_needed),
                 )
                 Spacer(Modifier.height(8.dp))

@@ -27,14 +27,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.locationjoystick.core.common.util.currentLocationShareText
+import com.locationjoystick.core.common.util.haversineDistance
 import com.locationjoystick.core.common.util.shareCurrentLocationCoordinates
 import com.locationjoystick.core.data.CooldownState
-import com.locationjoystick.core.data.toBadgeText
 import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.component.FavoriteTargetDetail
 import com.locationjoystick.core.designsystem.component.FavoritesList
 import com.locationjoystick.core.designsystem.component.LjButton
 import com.locationjoystick.core.designsystem.component.LjTextButton
+import com.locationjoystick.core.designsystem.component.cooldownBadgeText
+import com.locationjoystick.core.designsystem.component.rememberCooldownStringLookup
 import com.locationjoystick.core.model.FavoriteLocation
 import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.SavedItemSortMode
@@ -143,6 +145,7 @@ internal fun FavoritesFloatingView(
                 }
             }
         } else {
+            val getString = rememberCooldownStringLookup()
             FavoritesList(
                 title = null,
                 favorites = favorites,
@@ -152,7 +155,11 @@ internal fun FavoritesFloatingView(
                 enableSearch = false,
                 filterQuery = searchQuery,
                 cooldownBadgeText = { fav ->
-                    (cooldownStates[fav.id] ?: CooldownState.Ready).toBadgeText(currentPosition, fav.position)
+                    cooldownBadgeText(
+                        (cooldownStates[fav.id] as? CooldownState.Cooling)?.let { it.remainingSeconds to it.distanceMeters },
+                        currentPosition?.let { haversineDistance(it, fav.position) },
+                        getString,
+                    )
                 },
             )
             if (onAddFromHere != null) {

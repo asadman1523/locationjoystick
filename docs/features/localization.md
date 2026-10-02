@@ -25,6 +25,8 @@ identical keys: `app`, `core/common`, `core/designsystem`, `core/location`, `cor
 `feature/routes/impl`, `feature/settings/impl`, `feature/widget/impl`. A module may split its
 strings across several files in the same `values*/` folders (e.g. `coordinate_workflow_strings.xml`
 in `app`, `core/common` and `core/designsystem`), each with a sibling in every supported locale.
+Cooldown advisory/badge text lives in `core/designsystem`'s `cooldown_strings.xml`, formatted by
+`cooldownAdvisoryLabel()`/`cooldownBadgeText()` (`CooldownText.kt`); `CooldownState` itself holds no text.
 
 ## Selecting a Display Language
 

@@ -46,11 +46,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locationjoystick.core.common.util.formatCapturedPoint
+import com.locationjoystick.core.common.util.haversineDistance
 import com.locationjoystick.core.common.util.isValidLatLng
 import com.locationjoystick.core.common.util.shareCurrentLocationCoordinates
 import com.locationjoystick.core.common.util.toLocaleDoubleOrNull
 import com.locationjoystick.core.data.CooldownState
-import com.locationjoystick.core.data.toBadgeText
 import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.component.CooldownAdvisoryBadge
 import com.locationjoystick.core.designsystem.component.DeleteItemType
@@ -66,7 +66,9 @@ import com.locationjoystick.core.designsystem.component.LjScaffold
 import com.locationjoystick.core.designsystem.component.LjTextButton
 import com.locationjoystick.core.designsystem.component.SavedItemSortMenu
 import com.locationjoystick.core.designsystem.component.WideContentClamp
+import com.locationjoystick.core.designsystem.component.cooldownBadgeText
 import com.locationjoystick.core.designsystem.component.readPlainText
+import com.locationjoystick.core.designsystem.component.rememberCooldownStringLookup
 import com.locationjoystick.core.designsystem.component.rememberLjSheetState
 import com.locationjoystick.core.designsystem.component.writePlainText
 import com.locationjoystick.core.location.rememberSpoofToggleState
@@ -468,7 +470,13 @@ private fun FavoriteCard(
             style = MaterialTheme.typography.bodySmall,
         )
         Spacer(Modifier.height(6.dp))
-        CooldownAdvisoryBadge(cooldownState.toBadgeText(currentPosition, favorite.position))
+        CooldownAdvisoryBadge(
+            cooldownBadgeText(
+                (cooldownState as? CooldownState.Cooling)?.let { it.remainingSeconds to it.distanceMeters },
+                currentPosition?.let { haversineDistance(it, favorite.position) },
+                rememberCooldownStringLookup(),
+            ),
+        )
     }
 }
 
