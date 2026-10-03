@@ -258,6 +258,13 @@ object AppConstants {
         const val CACHE_TTL_MS = 86_400_000L
     }
 
+    object PhotonConstants {
+        /** Search is `$BASE_URL/api`, reverse is `$BASE_URL/reverse`; can point at a self-hosted instance. */
+        const val BASE_URL = "https://photon.komoot.io"
+        const val CONNECT_TIMEOUT_MS = 5000
+        const val READ_TIMEOUT_MS = 5000
+    }
+
     object ElevationConstants {
         const val BASE_URL = "https://api.open-meteo.com/v1/elevation"
         const val CONNECT_TIMEOUT_MS = 5000

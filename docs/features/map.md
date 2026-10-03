@@ -115,7 +115,7 @@ See docs/features/favorites.md and docs/features/routes.md.
 
 Nominatim search (`NominatimSearchBar`) keeps its 300 ms typing debounce and goes through the process-wide
 `Geocoding.provider` (`GeocodingProvider`, `:core:common`), which also serves the reverse lookups (spoof-toggle
-label, map-picker suggested name). `NominatimProvider` is the only implementation; it owns the Nominatim URLs and JSON,
+label, map-picker suggested name). `NominatimProvider` is the active provider (`PhotonProvider`, keyless `photon.komoot.io`, reachable from mainland China, is implemented but not yet selected and reuses the same search cache/spacing client); it owns the Nominatim URLs and JSON,
 maps them to `GeocodeResult`/`ReverseGeocodeResult`, and uses `NominatimSearchClient` for search: results are cached (24 h fresh, expired entries served only if the
 request fails) and request starts are spaced at least 1.1 s apart to respect Nominatim's 1 request/second policy.
 
