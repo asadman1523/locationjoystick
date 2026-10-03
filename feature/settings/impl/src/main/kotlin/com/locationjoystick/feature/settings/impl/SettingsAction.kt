@@ -1,6 +1,7 @@
 package com.locationjoystick.feature.settings.impl
 
 import com.locationjoystick.core.model.AppFeature
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.RoamingDefaults
 import com.locationjoystick.core.model.SpeedUnit
@@ -34,6 +35,10 @@ internal sealed class SettingsAction {
 
     data class SetMapFollowsLocation(
         val enabled: Boolean,
+    ) : SettingsAction()
+
+    data class SetDisabledGeocodingProviders(
+        val ids: Set<GeocodingProviderId>,
     ) : SettingsAction()
 
     data class SetMapTileSource(

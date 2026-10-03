@@ -2,6 +2,7 @@ package com.locationjoystick.feature.settings.impl
 
 import com.locationjoystick.core.common.constants.AppConstants
 import com.locationjoystick.core.model.AppFeature
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.SpeedProfile
 import com.locationjoystick.core.model.SpeedUnit
@@ -17,6 +18,7 @@ data class SettingsUiState(
     val rememberLastLocation: Boolean = true,
     val mapFollowsLocation: Boolean = true,
     val mapTileSource: MapTileSource = MapTileSource.DEFAULT,
+    val disabledGeocodingProviders: Set<GeocodingProviderId> = emptySet(),
     val jitterIdleRadiusMeters: Double = AppConstants.JitterConstants.DEFAULT_IDLE_RADIUS_METERS,
     val jitterMovingRadiusMeters: Double = 1.0,
     val jitterMaxStepMeters: Double = AppConstants.JitterConstants.DEFAULT_STEP_METERS_PER_TICK,

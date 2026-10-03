@@ -5,6 +5,7 @@ import com.locationjoystick.core.model.AppFeature
 import com.locationjoystick.core.model.AppSettings
 import com.locationjoystick.core.model.ExportData
 import com.locationjoystick.core.model.FavoriteLocation
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.RoamingDefaults
@@ -84,6 +85,7 @@ internal object SettingsExportCodec {
         settingsObj.put("realismSuspendedMockingEnabled", data.settings.suspendedMockingEnabled)
         settingsObj.put("hideTeleportFeatures", data.settings.hideTeleportFeatures)
         settingsObj.put("mapTileSource", data.settings.mapTileSource.name)
+        settingsObj.put("disabledGeocodingProviders", JSONArray(data.settings.disabledGeocodingProviders.map { it.name }))
         settingsObj.put("hideWidgetOverlay", data.settings.hideWidgetOverlay)
         settingsObj.put("hideForegroundNotification", data.settings.hideForegroundNotification)
         settingsObj.put("showRouteJumpButtons", data.settings.showRouteJumpButtons)
@@ -231,6 +233,14 @@ internal object SettingsExportCodec {
             )
         val hideTeleportFeatures = settingsObj.optBoolean("hideTeleportFeatures", false)
         val mapTileSource = MapTileSource.fromName(settingsObj.optString("mapTileSource"))
+        val disabledGeocodingProviders =
+            settingsObj
+                .optJSONArray("disabledGeocodingProviders")
+                ?.let { arr ->
+                    buildSet {
+                        for (i in 0 until arr.length()) GeocodingProviderId.fromName(arr.optString(i))?.let { add(it) }
+                    }
+                }.orEmpty()
         val hideWidgetOverlay = settingsObj.optBoolean("hideWidgetOverlay", false)
         val hideForegroundNotification = settingsObj.optBoolean("hideForegroundNotification", false)
         val showRouteJumpButtons =
@@ -302,6 +312,7 @@ internal object SettingsExportCodec {
                 suspendedMockingEnabled = suspendedMockingEnabled,
                 hideTeleportFeatures = hideTeleportFeatures,
                 mapTileSource = mapTileSource,
+                disabledGeocodingProviders = disabledGeocodingProviders,
                 hideWidgetOverlay = hideWidgetOverlay,
                 hideForegroundNotification = hideForegroundNotification,
                 showRouteJumpButtons = showRouteJumpButtons,

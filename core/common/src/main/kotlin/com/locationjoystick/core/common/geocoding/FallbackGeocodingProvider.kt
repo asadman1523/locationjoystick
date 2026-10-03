@@ -4,12 +4,13 @@ import com.locationjoystick.core.common.constants.AppConstants
 import kotlinx.coroutines.CancellationException
 
 /**
- * Tries [providers] in order. A provider that throws is skipped for
+ * Tries the [enabled] [providers] in order (all of them when none is enabled). A provider that throws is skipped for
  * [AppConstants.GeocodingConstants.PROVIDER_COOLDOWN_MS]; when all are cooling down, all are tried.
  * Cooldown state is in memory and shared by search and reverse.
  */
 class FallbackGeocodingProvider(
     private val providers: List<GeocodingProvider>,
+    private val enabled: (GeocodingProvider) -> Boolean = { true },
     private val nowMs: () -> Long = System::currentTimeMillis,
 ) : GeocodingProvider {
     private val downUntil = mutableMapOf<GeocodingProvider, Long>()
@@ -40,7 +41,8 @@ class FallbackGeocodingProvider(
     @Synchronized
     private fun candidates(): List<GeocodingProvider> {
         val now = nowMs()
-        return providers.filter { (downUntil[it] ?: 0L) <= now }.ifEmpty { providers }
+        val active = providers.filter(enabled).ifEmpty { providers }
+        return active.filter { (downUntil[it] ?: 0L) <= now }.ifEmpty { active }
     }
 
     @Synchronized

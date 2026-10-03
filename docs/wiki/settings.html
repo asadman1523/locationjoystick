@@ -225,6 +225,27 @@
     </table>
     </div>
 
+    <h3 id="place-search">Place search</h3>
+    <p>Choose which services look up places and addresses. If one cannot be reached, the app tries the next one that is on. At least one must stay on. If you are in mainland China, turn off Nominatim so searches do not wait for it to time out.</p>
+
+    <div class="table-wrap">
+    <table class="option-table">
+      <thead><tr><th>Option</th><th>Default</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Nominatim (OpenStreetMap)</td>
+          <td class="default-cell">On</td>
+          <td>The main search service. Turn it off if it is slow or blocked where you are.</td>
+        </tr>
+        <tr>
+          <td>Photon (Komoot)</td>
+          <td class="default-cell">On</td>
+          <td>The backup search service. It works well from mainland China.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
     <h3 id="app-features">App Features</h3>
     <p>Choose which quick-access features appear in the floating widget and on the map screen. Each feature has one checkbox for the widget and one for the map. Drag the handle on the left to reorder. Both use the same order. See <a href="overlays.html#available-widget-controls">Overlays</a> for what each control does.</p>
 
@@ -448,12 +469,12 @@
         </tr>
         <tr id="search-privacy">
           <td><strong>Place search (Nominatim)</strong><br><small><a href="https://nominatim.openstreetmap.org" target="_blank" rel="noopener">nominatim.openstreetmap.org</a></small></td>
-          <td>Place search in the route creator and the favorites map picker. Used only when you type a search.</td>
+          <td>Place search in the route creator and the favorites map picker. Used only when you type a search, and only if it is turned on in Settings.</td>
           <td>The text you type, such as a place name or address. No coordinates and nothing that identifies you.</td>
         </tr>
         <tr>
           <td><strong>Place search backup (Photon)</strong><br><small><a href="https://photon.komoot.io" target="_blank" rel="noopener">photon.komoot.io</a></small></td>
-          <td>Place search and place-name lookup when the main search service cannot be reached.</td>
+          <td>Place search and place-name lookup when the main search service cannot be reached or is turned off in Settings.</td>
           <td>The text you type, or the coordinates of the spot you look up. Nothing that identifies you.</td>
         </tr>
         <tr>

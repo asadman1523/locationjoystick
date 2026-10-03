@@ -7,6 +7,7 @@ import com.locationjoystick.core.datastore.toActiveSpeedProfile
 import com.locationjoystick.core.datastore.toAppFeature
 import com.locationjoystick.core.model.AppFeature
 import com.locationjoystick.core.model.FeatureSurface
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.RecentSearch
@@ -229,6 +230,12 @@ class SettingsRepository
         fun getMapFollowsLocation(): Flow<Boolean> = dataSource.getMapFollowsLocation()
 
         suspend fun setMapFollowsLocation(enabled: Boolean) = dataSource.setMapFollowsLocation(enabled)
+
+        fun getDisabledGeocodingProviders(): Flow<Set<GeocodingProviderId>> =
+            dataSource.getDisabledGeocodingProviders().map { it.mapNotNull(GeocodingProviderId::fromName).toSet() }
+
+        suspend fun setDisabledGeocodingProviders(ids: Set<GeocodingProviderId>) =
+            dataSource.setDisabledGeocodingProviders(ids.map { it.name }.toSet())
 
         fun getMapTileSource(): Flow<MapTileSource> = dataSource.getMapTileSource().map { MapTileSource.fromName(it) }
 

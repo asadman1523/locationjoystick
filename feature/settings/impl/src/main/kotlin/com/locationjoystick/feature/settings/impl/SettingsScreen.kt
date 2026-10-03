@@ -284,6 +284,10 @@ fun SettingsRoute(
                     viewModel.setMapFollowsLocation(action.enabled)
                 }
 
+                is SettingsAction.SetDisabledGeocodingProviders -> {
+                    viewModel.setDisabledGeocodingProviders(action.ids)
+                }
+
                 is SettingsAction.SetMapTileSource -> {
                     viewModel.setMapTileSource(action.source)
                 }

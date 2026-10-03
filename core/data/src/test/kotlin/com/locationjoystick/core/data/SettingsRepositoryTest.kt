@@ -1398,6 +1398,14 @@ class FakeAppPreferencesDataSource : PreferencesDataSource {
         mapFollowsLocationFlow.value = enabled
     }
 
+    private val disabledGeocodingProvidersFlow = MutableStateFlow<Set<String>>(emptySet())
+
+    override fun getDisabledGeocodingProviders(): Flow<Set<String>> = disabledGeocodingProvidersFlow
+
+    override suspend fun setDisabledGeocodingProviders(names: Set<String>) {
+        disabledGeocodingProvidersFlow.value = names
+    }
+
     private val mapTileSourceFlow = MutableStateFlow(MapTileSource.DEFAULT.name)
 
     override fun getMapTileSource(): Flow<String> = mapTileSourceFlow

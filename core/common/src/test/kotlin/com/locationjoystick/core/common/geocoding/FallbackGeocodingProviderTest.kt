@@ -99,4 +99,33 @@ class FallbackGeocodingProviderTest {
             a.failure = null
             assertEquals("A", sut.search("x").single().displayName)
         }
+
+    @Test
+    fun `disabled provider is never called`() =
+        runTest {
+            a.failure = null
+            val s = FallbackGeocodingProvider(listOf(a, b), { it !== a }) { now }
+            assertEquals("B", s.search("x").single().displayName)
+            assertEquals("B", s.reverse(0.0, 0.0)?.locality)
+            assertEquals(0, a.calls)
+        }
+
+    @Test
+    fun `all disabled behaves as all enabled`() =
+        runTest {
+            a.failure = null
+            val s = FallbackGeocodingProvider(listOf(a, b), { false }) { now }
+            assertEquals("A", s.search("x").single().displayName)
+        }
+
+    @Test
+    fun `cooldown fallback does not revive a disabled provider`() =
+        runTest {
+            a.failure = null
+            b.failure = IOException("down")
+            val s = FallbackGeocodingProvider(listOf(a, b), { it !== a }) { now }
+            assertEquals(emptyList<GeocodeResult>(), s.search("x"))
+            assertEquals(emptyList<GeocodeResult>(), s.search("x"))
+            assertEquals(0, a.calls)
+        }
 }

@@ -24,6 +24,7 @@ import com.locationjoystick.core.location.CompassHeadingSource
 import com.locationjoystick.core.model.AppFeature
 import com.locationjoystick.core.model.AppSettings
 import com.locationjoystick.core.model.ExportData
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.RoamingDefaults
 import com.locationjoystick.core.model.SpeedProfile
@@ -163,6 +164,7 @@ class SettingsViewModel
             val rememberLastLocation: Boolean? = null,
             val mapFollowsLocation: Boolean? = null,
             val mapTileSource: MapTileSource? = null,
+            val disabledGeocodingProviders: Set<GeocodingProviderId>? = null,
             val jitterIdleRadius: Double? = null,
             val jitterMovingRadius: Double? = null,
             val jitterMaxStepMeters: Double? = null,
@@ -238,6 +240,7 @@ class SettingsViewModel
                     rememberLastLocation = draftState.rememberLastLocation ?: snapshot.rememberLastLocation,
                     mapFollowsLocation = draftState.mapFollowsLocation ?: snapshot.mapFollowsLocation,
                     mapTileSource = draftState.mapTileSource ?: snapshot.mapTileSource,
+                    disabledGeocodingProviders = draftState.disabledGeocodingProviders ?: snapshot.disabledGeocodingProviders,
                     jitterIdleRadiusMeters = draftState.jitterIdleRadius ?: snapshot.jitterIdleRadius,
                     jitterMovingRadiusMeters = draftState.jitterMovingRadius ?: snapshot.jitterMovingRadius,
                     jitterMaxStepMeters = draftState.jitterMaxStepMeters ?: snapshot.jitterMaxStepMeters,
@@ -323,6 +326,12 @@ class SettingsViewModel
 
         fun setMapFollowsLocation(enabled: Boolean) {
             mutableDraft.update { it.copy(mapFollowsLocation = enabled) }
+        }
+
+        /** No-op if [ids] disables every provider — at least one geocoding provider must stay on. */
+        fun setDisabledGeocodingProviders(ids: Set<GeocodingProviderId>) {
+            if (ids.containsAll(GeocodingProviderId.entries)) return
+            mutableDraft.update { it.copy(disabledGeocodingProviders = ids) }
         }
 
         fun setMapTileSource(source: MapTileSource) {
@@ -557,6 +566,7 @@ class SettingsViewModel
                             rememberLastLocation = state.rememberLastLocation,
                             mapFollowsLocation = state.mapFollowsLocation,
                             mapTileSource = state.mapTileSource,
+                            disabledGeocodingProviders = state.disabledGeocodingProviders,
                             jitterIdleRadius = state.jitterIdleRadiusMeters,
                             jitterMovingRadius = state.jitterMovingRadiusMeters,
                             jitterMaxStepMeters = state.jitterMaxStepMeters,
@@ -661,6 +671,7 @@ class SettingsViewModel
                 AppSettings(
                     speedUnit = state.speedUnit,
                     mapTileSource = state.mapTileSource,
+                    disabledGeocodingProviders = state.disabledGeocodingProviders,
                     featureOrder = state.featureOrder,
                     enabledWidgetFeatures = state.enabledWidgetFeatures,
                     enabledMapFeatures = state.enabledMapFeatures,
@@ -872,6 +883,7 @@ class SettingsViewModel
                     driveSpeedMs = profileById["drive"]?.speedMetersPerSecond ?: currentSnapshot.driveSpeedMs,
                     speedUnit = data.settings.speedUnit,
                     mapTileSource = data.settings.mapTileSource,
+                    disabledGeocodingProviders = data.settings.disabledGeocodingProviders,
                     featureOrder = data.settings.featureOrder,
                     enabledWidgetFeatures = data.settings.enabledWidgetFeatures,
                     enabledMapFeatures = data.settings.enabledMapFeatures,

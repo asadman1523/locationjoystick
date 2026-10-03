@@ -81,6 +81,10 @@
     <string name="settings_menus_light_mode">"Light mode"</string>
     <string name="settings_menus_map_section">"Map"</string>
     <string name="settings_menus_map_source_desc">"Choose which map tiles are shown on the map screen, floating map, favorites picker and route creator. Your saved locations and mock GPS position are unaffected."</string>
+    <string name="settings_menus_geocoding_section">"Place search"</string>
+    <string name="settings_menus_geocoding_desc">"Choose which services look up places and addresses. At least one must stay on. If you are in mainland China, turn off Nominatim so searches do not wait for it to time out."</string>
+    <string name="settings_menus_geocoding_nominatim">"Nominatim (OpenStreetMap)"</string>
+    <string name="settings_menus_geocoding_photon">"Photon (Komoot)"</string>
     <string name="settings_menus_map_source">"Map source"</string>
     <string name="settings_menus_map_source_osm">"OpenStreetMap"</string>
     <string name="settings_menus_map_source_amap">"Amap (高德)"</string>

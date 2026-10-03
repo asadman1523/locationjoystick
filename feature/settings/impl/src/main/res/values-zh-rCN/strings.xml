@@ -81,6 +81,10 @@
     <string name="settings_menus_light_mode">"浅色模式"</string>
     <string name="settings_menus_map_section">"地图"</string>
     <string name="settings_menus_map_source_desc">"选择地图页面、悬浮地图、收藏选点和路线创建器使用的地图瓦片。已保存的位置和模拟 GPS 坐标不受影响。"</string>
+    <string name="settings_menus_geocoding_section">"地点搜索"</string>
+    <string name="settings_menus_geocoding_desc">"选择用于查找地点和地址的服务。至少保留一项开启。如果你在中国大陆，请关闭 Nominatim，以免搜索时等待其超时。"</string>
+    <string name="settings_menus_geocoding_nominatim">"Nominatim（OpenStreetMap）"</string>
+    <string name="settings_menus_geocoding_photon">"Photon（Komoot）"</string>
     <string name="settings_menus_map_source">"地图源"</string>
     <string name="settings_menus_map_source_osm">"OpenStreetMap"</string>
     <string name="settings_menus_map_source_amap">"高德地图"</string>

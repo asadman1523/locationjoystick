@@ -73,6 +73,7 @@ import com.locationjoystick.core.designsystem.component.speedProfileLabel
 import com.locationjoystick.core.model.AppFeature
 import com.locationjoystick.core.model.AppLanguage
 import com.locationjoystick.core.model.FeatureSurface
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.SpeedProfile
 import com.locationjoystick.core.model.ThemeMode
@@ -143,6 +144,8 @@ internal fun SettingsMenusSubScreen(
                         Spacer(Modifier.height(24.dp))
                         MapSourceSection(uiState, onAction)
                         Spacer(Modifier.height(24.dp))
+                        GeocodingSection(uiState, onAction)
+                        Spacer(Modifier.height(24.dp))
                         AppFeaturesSection(uiState, isRooted, onAction)
                         Spacer(Modifier.height(24.dp))
                         SpeedCycleSection(uiState, onAction)
@@ -158,6 +161,40 @@ internal fun SettingsMenusSubScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun GeocodingSection(
+    uiState: SettingsUiState,
+    onAction: (SettingsAction) -> Unit,
+) {
+    Text(stringResource(R.string.settings_menus_geocoding_section), style = MaterialTheme.typography.headlineSmall)
+    Spacer(Modifier.height(4.dp))
+    Text(
+        stringResource(R.string.settings_menus_geocoding_desc),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(Modifier.height(8.dp))
+    val enabledCount = GeocodingProviderId.entries.count { it !in uiState.disabledGeocodingProviders }
+    GeocodingProviderId.entries.forEach { id ->
+        val checked = id !in uiState.disabledGeocodingProviders
+        LjCheckboxRow(
+            checked = checked,
+            title =
+                stringResource(
+                    when (id) {
+                        GeocodingProviderId.NOMINATIM -> R.string.settings_menus_geocoding_nominatim
+                        GeocodingProviderId.PHOTON -> R.string.settings_menus_geocoding_photon
+                    },
+                ),
+            enabled = !(checked && enabledCount == 1),
+            onCheckedChange = { isChecked ->
+                val disabled = uiState.disabledGeocodingProviders
+                onAction(SettingsAction.SetDisabledGeocodingProviders(if (isChecked) disabled - id else disabled + id))
+            },
+        )
     }
 }
 

@@ -17,6 +17,7 @@ import com.locationjoystick.core.location.CompassHeadingSource
 import com.locationjoystick.core.model.AppFeature
 import com.locationjoystick.core.model.AppSettings
 import com.locationjoystick.core.model.ExportData
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.RecentSearch
@@ -158,6 +159,21 @@ class SettingsViewModelSaveTest {
             assertEquals(999.0, snapshot.roamingDefaults.radiusMeters, 0.001)
             assertEquals(5000.0, snapshot.roamingDefaults.distanceMeters, 0.001)
             assertEquals("bike", snapshot.roamingDefaults.speedProfileId)
+        }
+
+    @Test
+    fun `saveChanges writes disabled geocoding providers and refuses to disable all`() =
+        runTest(testDispatcher) {
+            backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }
+            viewModel.setDisabledGeocodingProviders(setOf(GeocodingProviderId.NOMINATIM))
+            viewModel.setDisabledGeocodingProviders(GeocodingProviderId.entries.toSet())
+
+            viewModel.saveChanges()
+
+            assertEquals(
+                setOf(GeocodingProviderId.NOMINATIM),
+                fakeDataSource.lastAppliedSnapshot!!.disabledGeocodingProviders,
+            )
         }
 
     @Test
@@ -594,6 +610,10 @@ internal class SaveTestPreferencesDataSource : PreferencesDataSource {
     override fun getMapFollowsLocation(): Flow<Boolean> = flowOf(true)
 
     override suspend fun setMapFollowsLocation(enabled: Boolean) = Unit
+
+    override fun getDisabledGeocodingProviders(): Flow<Set<String>> = flowOf(emptySet())
+
+    override suspend fun setDisabledGeocodingProviders(names: Set<String>) = Unit
 
     override fun getMapTileSource(): Flow<String> = flowOf(MapTileSource.DEFAULT.name)
 

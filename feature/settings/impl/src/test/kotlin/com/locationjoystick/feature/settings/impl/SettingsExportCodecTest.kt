@@ -3,6 +3,7 @@ package com.locationjoystick.feature.settings.impl
 import com.locationjoystick.core.model.AppFeature
 import com.locationjoystick.core.model.ExportData
 import com.locationjoystick.core.model.FavoriteLocation
+import com.locationjoystick.core.model.GeocodingProviderId
 import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.Route
 import com.locationjoystick.core.model.RouteType
@@ -236,6 +237,29 @@ class SettingsExportCodecTest {
         val parsed = SettingsExportCodec.parseExportData(json)
 
         assertEquals(true, parsed.settings.hideTeleportFeatures)
+    }
+
+    @Test
+    fun `round-trip preserves disabledGeocodingProviders`() {
+        val data =
+            minimalExportData().copy(
+                settings = minimalExportData().settings.copy(disabledGeocodingProviders = setOf(GeocodingProviderId.NOMINATIM)),
+            )
+
+        val parsed = SettingsExportCodec.parseExportData(SettingsExportCodec.serializeExportData(data))
+
+        assertEquals(setOf(GeocodingProviderId.NOMINATIM), parsed.settings.disabledGeocodingProviders)
+    }
+
+    @Test
+    fun `parse defaults missing disabledGeocodingProviders to none and ignores unknown names`() {
+        @Suppress("ktlint:standard:max-line-length") // JSON string literal cannot be split without changing its value
+        val old = """{"schemaVersion":1,"exportedAt":0,"settings":{"speedUnit":"KMH","enabledWidgetFeatures":[]},"speedProfiles":[],"routes":[],"favoriteLocations":[],"jitterIdleRadius":0.0,"jitterMovingRadius":1.0,"jitterIntervalSeconds":3}"""
+        assertEquals(emptySet<GeocodingProviderId>(), SettingsExportCodec.parseExportData(old).settings.disabledGeocodingProviders)
+
+        @Suppress("ktlint:standard:max-line-length") // JSON string literal cannot be split without changing its value
+        val unknown = old.replace("\"speedUnit\"", "\"disabledGeocodingProviders\":[\"PHOTON\",\"FUTURE\"],\"speedUnit\"")
+        assertEquals(setOf(GeocodingProviderId.PHOTON), SettingsExportCodec.parseExportData(unknown).settings.disabledGeocodingProviders)
     }
 
     @Test

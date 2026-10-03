@@ -1,5 +1,7 @@
 package com.locationjoystick.core.common.geocoding
 
+import com.locationjoystick.core.model.GeocodingProviderId
+
 /** One forward-geocoding hit in the app's own shape, independent of the provider that returned it. */
 data class GeocodeResult(
     val lat: Double,
@@ -31,5 +33,18 @@ interface GeocodingProvider {
 
 /** Process-wide entry so every caller shares one provider chain (cache, request spacing, cooldown). */
 object Geocoding {
-    val provider: GeocodingProvider = FallbackGeocodingProvider(listOf(NominatimProvider(), PhotonProvider()))
+    private val nominatim = NominatimProvider()
+    private val photon = PhotonProvider()
+    private val ids =
+        mapOf<GeocodingProvider, GeocodingProviderId>(
+            nominatim to GeocodingProviderId.NOMINATIM,
+            photon to GeocodingProviderId.PHOTON,
+        )
+
+    /** Providers switched off in Settings; kept current by `LjApplication`. */
+    @Volatile
+    var disabled: Set<GeocodingProviderId> = emptySet()
+
+    val provider: GeocodingProvider =
+        FallbackGeocodingProvider(listOf(nominatim, photon), enabled = { ids[it] !in disabled })
 }
