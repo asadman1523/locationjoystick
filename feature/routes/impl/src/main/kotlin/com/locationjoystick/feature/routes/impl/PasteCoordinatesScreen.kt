@@ -292,8 +292,7 @@ internal fun PasteCoordinatesScreen(
                                             currentTileSource.defaultCenter
                                                 .let { currentTileSource.projection.toMap(it) }
                                                 .let { MapLatLng(it.latitude, it.longitude) },
-                                        )
-                                        .zoom(AppConstants.MapConstants.DEFAULT_ZOOM)
+                                        ).zoom(AppConstants.MapConstants.DEFAULT_ZOOM)
                                         .build()
                                 applyStyle(map)
                             }
