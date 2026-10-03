@@ -50,6 +50,7 @@ import com.locationjoystick.feature.routes.impl.PasteCoordinatesRoute
 import com.locationjoystick.feature.routes.impl.RouteCreatorRoute
 import com.locationjoystick.feature.routes.impl.RouteDetailScreen
 import com.locationjoystick.feature.routes.impl.RoutesRoute
+import com.locationjoystick.feature.settings.api.SETTINGS_CAPTURE_ROUTE
 import com.locationjoystick.feature.settings.api.SETTINGS_ROUTE
 import com.locationjoystick.feature.settings.impl.SettingsRoute
 
@@ -204,7 +205,10 @@ fun LjNavHost(
             popEnterTransition = { fadeInScale() },
             popExitTransition = { fadeOutScale() },
         ) {
-            CaptureCoordinatesRoute(onOpenDrawer = onOpenDrawer)
+            CaptureCoordinatesRoute(
+                onOpenDrawer = onOpenDrawer,
+                onOpenSetup = { navController.navigate(SETTINGS_CAPTURE_ROUTE) { launchSingleTop = true } },
+            )
         }
 
         navigation(startDestination = ROUTES_ROUTE, route = ROUTES_GRAPH) {
@@ -344,6 +348,21 @@ fun LjNavHost(
                 onOpenDrawer = onOpenDrawer,
                 onNavigateUp = { navController.navigateUp() },
                 viewModel = hiltViewModel(),
+            )
+        }
+
+        composable(
+            route = SETTINGS_CAPTURE_ROUTE,
+            enterTransition = { fadeInScale() },
+            exitTransition = { fadeOutScale() },
+            popEnterTransition = { fadeInScale() },
+            popExitTransition = { fadeOutScale() },
+        ) {
+            SettingsRoute(
+                onOpenDrawer = onOpenDrawer,
+                onNavigateUp = { navController.navigateUp() },
+                viewModel = hiltViewModel(),
+                openCaptureSetup = true,
             )
         }
 

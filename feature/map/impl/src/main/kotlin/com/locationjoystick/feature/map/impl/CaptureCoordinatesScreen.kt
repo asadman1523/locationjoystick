@@ -3,17 +3,13 @@ package com.locationjoystick.feature.map.impl
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -27,9 +23,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.locationjoystick.core.common.constants.AppConstants
 import com.locationjoystick.core.common.util.captureBrowserChoices
 import com.locationjoystick.core.common.util.isCaptureDefaultBrowser
-import com.locationjoystick.core.common.util.launchCaptureDefaultBrowser
-import com.locationjoystick.core.common.util.launchCaptureMapsLinks
-import com.locationjoystick.core.common.util.launchCaptureRestoreDefaultApps
 import com.locationjoystick.core.common.util.resolvePreferredBrowserPackage
 import com.locationjoystick.core.designsystem.LjTheme
 import com.locationjoystick.core.designsystem.component.CaptureCoordinatesForm
@@ -37,7 +30,6 @@ import com.locationjoystick.core.designsystem.component.CaptureModeState
 import com.locationjoystick.core.designsystem.component.CapturePointsState
 import com.locationjoystick.core.designsystem.component.CaptureRouteSaveState
 import com.locationjoystick.core.designsystem.component.CaptureSetupState
-import com.locationjoystick.core.designsystem.component.LjCheckboxRow
 import com.locationjoystick.core.designsystem.component.LjOverflowMenu
 import com.locationjoystick.core.designsystem.component.LjScaffold
 import com.locationjoystick.core.location.rememberSpoofToggleState
@@ -47,6 +39,7 @@ import com.locationjoystick.feature.map.impl.R
 @Composable
 fun CaptureCoordinatesRoute(
     onOpenDrawer: () -> Unit,
+    onOpenSetup: () -> Unit,
     viewModel: CaptureCoordinatesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -71,8 +64,6 @@ fun CaptureCoordinatesRoute(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    LaunchedEffect(isDefaultBrowser, uiState.setupReset) { viewModel.onDefaultBrowserChecked(isDefaultBrowser) }
-
     CaptureCoordinatesScreen(
         uiState = uiState,
         captureSetup =
@@ -83,23 +74,15 @@ fun CaptureCoordinatesRoute(
                 browserChoices = browserChoices,
                 selectedBrowserPackage = selectedBrowser?.packageName,
                 onSelectBrowser = viewModel::rememberPreviousBrowser,
-                onRequestDefaultBrowser = {
-                    viewModel.clearSetupReset()
-                    context.launchCaptureDefaultBrowser(viewModel::rememberPreviousBrowser)
-                },
-                onOpenMapsLinks = { context.launchCaptureMapsLinks() },
                 onOpenSetupGuide = {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AppConstants.AppInfo.CAPTURE_GUIDE_URL)))
                 },
+                onOpenSetup = onOpenSetup,
             ),
         isSpoofing = spoofToggle.isSpoofing,
         onToggleSpoofing = spoofToggle.onToggle,
         locationLabel = spoofToggle.locationLabel,
         onOpenDrawer = onOpenDrawer,
-        onConfirmRestore = {
-            viewModel.restoreDefaultBrowser()
-            context.launchCaptureRestoreDefaultApps()
-        },
         onCaptureModeEnabledChange = viewModel::setCaptureModeEnabled,
         onCaptureEnabledChange = viewModel::setCaptureEnabled,
         onJumpEnabledChange = viewModel::setJumpEnabled,
@@ -119,7 +102,6 @@ internal fun CaptureCoordinatesScreen(
     onToggleSpoofing: () -> Unit,
     locationLabel: String?,
     onOpenDrawer: () -> Unit,
-    onConfirmRestore: () -> Unit,
     onCaptureModeEnabledChange: (Boolean) -> Unit,
     onCaptureEnabledChange: (Boolean) -> Unit,
     onJumpEnabledChange: (Boolean) -> Unit,
@@ -129,16 +111,6 @@ internal fun CaptureCoordinatesScreen(
     onClearPoints: () -> Unit,
     onRemoveLast: () -> Unit,
 ) {
-    var showRestoreDialog by rememberSaveable { mutableStateOf(false) }
-    if (showRestoreDialog) {
-        RestoreDefaultBrowserDialog(
-            onConfirm = {
-                showRestoreDialog = false
-                onConfirmRestore()
-            },
-            onDismiss = { showRestoreDialog = false },
-        )
-    }
     LjScaffold(
         title = stringResource(R.string.capture_coordinates_screen_capture),
         isSpoofing = isSpoofing,
@@ -152,13 +124,6 @@ internal fun CaptureCoordinatesScreen(
                     onClick = {
                         dismiss()
                         captureSetup.onOpenSetupGuide()
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.capture_menu_restore_default_browser)) },
-                    onClick = {
-                        dismiss()
-                        showRestoreDialog = true
                     },
                 )
             }
@@ -202,33 +167,6 @@ internal fun CaptureCoordinatesScreen(
     }
 }
 
-@Composable
-private fun RestoreDefaultBrowserDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var understood by rememberSaveable { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.capture_restore_dialog_title)) },
-        text = {
-            LjCheckboxRow(
-                checked = understood,
-                onCheckedChange = { understood = it },
-                title = stringResource(R.string.capture_restore_dialog_checkbox),
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm, enabled = understood) {
-                Text(stringResource(R.string.capture_restore_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.capture_restore_dialog_cancel)) }
-        },
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun CaptureCoordinatesScreenPreview() {
@@ -248,15 +186,12 @@ private fun CaptureCoordinatesScreenPreview() {
                     browserChoices = emptyList(),
                     selectedBrowserPackage = null,
                     onSelectBrowser = {},
-                    onRequestDefaultBrowser = {},
-                    onOpenMapsLinks = {},
                     onOpenSetupGuide = {},
                 ),
             isSpoofing = false,
             onToggleSpoofing = {},
             locationLabel = null,
             onOpenDrawer = {},
-            onConfirmRestore = {},
             onCaptureModeEnabledChange = {},
             onCaptureEnabledChange = {},
             onJumpEnabledChange = {},

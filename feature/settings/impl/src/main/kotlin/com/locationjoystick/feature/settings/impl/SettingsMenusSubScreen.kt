@@ -2,6 +2,7 @@ package com.locationjoystick.feature.settings.impl
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.animation.core.animateFloatAsState
@@ -19,6 +20,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,6 +34,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,11 +61,17 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.locationjoystick.core.common.constants.AppConstants
 import com.locationjoystick.core.common.util.captureBrowserChoices
+import com.locationjoystick.core.common.util.isCaptureDefaultBrowser
+import com.locationjoystick.core.common.util.launchCaptureDefaultBrowser
+import com.locationjoystick.core.common.util.launchCaptureMapsLinks
+import com.locationjoystick.core.common.util.launchCaptureRestoreDefaultApps
 import com.locationjoystick.core.common.util.resolvePreferredBrowserPackage
 import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.LjSpacing
 import com.locationjoystick.core.designsystem.component.CapturePassThroughRow
+import com.locationjoystick.core.designsystem.component.CaptureRestoreDialog
 import com.locationjoystick.core.designsystem.component.CaptureSetupState
+import com.locationjoystick.core.designsystem.component.CaptureSetupSteps
 import com.locationjoystick.core.designsystem.component.CaptureToggleStep
 import com.locationjoystick.core.designsystem.component.CompassDisclosureDialog
 import com.locationjoystick.core.designsystem.component.LjButton
@@ -96,9 +106,14 @@ internal fun SettingsMenusSubScreen(
     onCheckCompassService: () -> Unit = {},
     onTestCompassDetection: suspend () -> Float? = { null },
     launchableApps: List<InstalledApp> = emptyList(),
+    scrollToCapture: Boolean = false,
     bottomBar: @Composable () -> Unit,
     snackbarHost: @Composable () -> Unit,
 ) {
+    val captureBringIntoView = remember { BringIntoViewRequester() }
+    LaunchedEffect(scrollToCapture, uiState.isLoading) {
+        if (scrollToCapture && !uiState.isLoading) captureBringIntoView.bringIntoView()
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer =
@@ -154,7 +169,7 @@ internal fun SettingsMenusSubScreen(
                         Spacer(Modifier.height(24.dp))
                         PrivacySection(uiState, onAction)
                         Spacer(Modifier.height(24.dp))
-                        CaptureSection(uiState, onAction, launchableApps)
+                        CaptureSection(uiState, onAction, launchableApps, Modifier.bringIntoViewRequester(captureBringIntoView))
                         Spacer(Modifier.height(24.dp))
                         DebugSection(uiState, onAction)
                     }
@@ -476,16 +491,16 @@ private fun PrivacySection(
 }
 
 /**
- * Same mode toggle, List/Jump checkboxes, and pass-through browser picker as the top-level Capture
- * screen — sourced from the same `CaptureCoordinatesRepository` state so both surfaces agree. Setup
- * steps (default-browser role, supported links) stay on the Capture screen only; see
- * docs/features/location-links.md (Opt-in Tier).
+ * Home of the Capture setup (default-browser role, supported links) plus the mode toggle, List/Jump
+ * checkboxes, and pass-through browser picker — all sourced from `CaptureCoordinatesRepository`. The
+ * Capture screen sends users here until setup is done; see docs/features/location-links.md (Opt-in Tier).
  */
 @Composable
 private fun CaptureSection(
     uiState: SettingsUiState,
     onAction: (SettingsAction) -> Unit,
     launchableApps: List<InstalledApp>,
+    modifier: Modifier = Modifier,
 ) {
     var launchPickerExpanded by remember { mutableStateOf(false) }
     val launchApp = launchableApps.find { it.packageName == uiState.launchAfterLinkPackage }
@@ -493,37 +508,76 @@ private fun CaptureSection(
     val browserChoices = remember(context) { captureBrowserChoices(context) }
     val preferredBrowserPackage = resolvePreferredBrowserPackage(uiState.capturePreviousBrowserPackage, context.packageName)
     val selectedBrowser = browserChoices.firstOrNull { it.packageName == preferredBrowserPackage } ?: browserChoices.firstOrNull()
+    var isDefaultBrowser by remember { mutableStateOf(context.isCaptureDefaultBrowser()) }
+    var showRestoreDialog by rememberSaveable { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) isDefaultBrowser = context.isCaptureDefaultBrowser()
+            }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(isDefaultBrowser, uiState.captureSetupReset) {
+        onAction(SettingsAction.CaptureDefaultBrowserChecked(isDefaultBrowser))
+    }
+    // A reset reopens the gate while this app still holds the role.
+    val setupDone = isDefaultBrowser && !uiState.captureSetupReset
+    val setupState =
+        CaptureSetupState(
+            isDefaultBrowser = setupDone,
+            passThroughBrowserName = selectedBrowser?.label ?: stringResource(R.string.settings_menus_capture_browser_automatic),
+            browserChoices = browserChoices,
+            selectedBrowserPackage = selectedBrowser?.packageName,
+            onSelectBrowser = { pkg -> onAction(SettingsAction.SetCapturePreviousBrowserPackage(pkg)) },
+            onRequestDefaultBrowser = {
+                onAction(SettingsAction.ClearCaptureSetupReset)
+                context.launchCaptureDefaultBrowser { pkg -> onAction(SettingsAction.SetCapturePreviousBrowserPackage(pkg)) }
+            },
+            onOpenMapsLinks = { context.launchCaptureMapsLinks() },
+            onOpenSetupGuide = {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(AppConstants.AppInfo.CAPTURE_GUIDE_URL)))
+            },
+        )
 
-    Text(stringResource(R.string.settings_menus_capture), style = MaterialTheme.typography.headlineSmall)
-    Spacer(Modifier.height(4.dp))
-    Text(
-        stringResource(R.string.settings_menus_capture_desc),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Spacer(Modifier.height(8.dp))
-    Column {
-        CaptureToggleStep(
-            captureModeEnabled = uiState.captureModeEnabled,
-            captureEnabled = uiState.captureEnabled,
-            jumpEnabled = uiState.jumpEnabled,
-            onCaptureModeEnabledChange = { onAction(SettingsAction.SetCaptureModeEnabled(it)) },
-            onCaptureEnabledChange = { onAction(SettingsAction.SetCaptureEnabled(it)) },
-            onJumpEnabledChange = { onAction(SettingsAction.SetJumpEnabled(it)) },
+    if (showRestoreDialog) {
+        CaptureRestoreDialog(
+            onConfirm = {
+                showRestoreDialog = false
+                onAction(SettingsAction.RestoreCaptureDefaultBrowser)
+                context.launchCaptureRestoreDefaultApps()
+            },
+            onDismiss = { showRestoreDialog = false },
         )
-        CapturePassThroughRow(
-            state =
-                CaptureSetupState(
-                    isDefaultBrowser = true,
-                    passThroughBrowserName = selectedBrowser?.label ?: stringResource(R.string.settings_menus_capture_browser_automatic),
-                    browserChoices = browserChoices,
-                    selectedBrowserPackage = selectedBrowser?.packageName,
-                    onSelectBrowser = { pkg -> onAction(SettingsAction.SetCapturePreviousBrowserPackage(pkg)) },
-                    onRequestDefaultBrowser = {},
-                    onOpenMapsLinks = {},
-                    onOpenSetupGuide = {},
-                ),
+    }
+
+    Column(modifier = modifier) {
+        Text(stringResource(R.string.settings_menus_capture), style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.settings_menus_capture_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(Modifier.height(8.dp))
+        if (setupDone) {
+            CaptureToggleStep(
+                captureModeEnabled = uiState.captureModeEnabled,
+                captureEnabled = uiState.captureEnabled,
+                jumpEnabled = uiState.jumpEnabled,
+                onCaptureModeEnabledChange = { onAction(SettingsAction.SetCaptureModeEnabled(it)) },
+                onCaptureEnabledChange = { onAction(SettingsAction.SetCaptureEnabled(it)) },
+                onJumpEnabledChange = { onAction(SettingsAction.SetJumpEnabled(it)) },
+            )
+            CapturePassThroughRow(state = setupState)
+            LjOutlinedButton(onClick = { showRestoreDialog = true }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(DesignR.string.capture_restore_default_browser), modifier = Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(8.dp))
+        } else {
+            CaptureSetupSteps(state = setupState)
+        }
         Box {
             LjOutlinedButton(onClick = { launchPickerExpanded = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(

@@ -79,6 +79,7 @@ fun SettingsRoute(
     onOpenDrawer: () -> Unit = {},
     onNavigateUp: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
+    openCaptureSetup: Boolean = false,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val roamingDefaults by viewModel.roamingDefaults.collectAsStateWithLifecycle()
@@ -250,6 +251,7 @@ fun SettingsRoute(
         onTestCompassDetection = { viewModel.testCompassDetection() },
         launchableApps = viewModel.launchableApps,
         onNavigateUp = onNavigateUp,
+        openCaptureSetup = openCaptureSetup,
         onAction = { action ->
             when (action) {
                 is SettingsAction.SetSpeed -> {
@@ -412,6 +414,18 @@ fun SettingsRoute(
                     viewModel.setCapturePreviousBrowserPackage(action.packageName)
                 }
 
+                SettingsAction.RestoreCaptureDefaultBrowser -> {
+                    viewModel.restoreCaptureDefaultBrowser()
+                }
+
+                SettingsAction.ClearCaptureSetupReset -> {
+                    viewModel.clearCaptureSetupReset()
+                }
+
+                is SettingsAction.CaptureDefaultBrowserChecked -> {
+                    viewModel.onCaptureDefaultBrowserChecked(action.isDefault)
+                }
+
                 is SettingsAction.SetLaunchAfterLinkPackage -> {
                     viewModel.setLaunchAfterLinkPackage(action.packageName)
                 }
@@ -527,14 +541,17 @@ internal fun SettingsScreen(
     onNavigateUp: () -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
+    openCaptureSetup: Boolean = false,
 ) {
-    var currentSection by remember { mutableStateOf<SettingsSection?>(null) }
+    var currentSection by remember { mutableStateOf(if (openCaptureSetup) SettingsSection.MENUS else null) }
+    // Opened from the Capture screen: Back returns there, not to the settings hub.
+    val atRoot = currentSection == null || (openCaptureSetup && currentSection == SettingsSection.MENUS)
     var pendingUnsavedIntent by remember { mutableStateOf<PendingUnsavedIntent?>(null) }
 
     val guardedBack = {
         if (uiState.isDirty) {
-            pendingUnsavedIntent = if (currentSection == null) PendingUnsavedIntent.ExitSettings else PendingUnsavedIntent.BackToHub
-        } else if (currentSection == null) {
+            pendingUnsavedIntent = if (atRoot) PendingUnsavedIntent.ExitSettings else PendingUnsavedIntent.BackToHub
+        } else if (atRoot) {
             onNavigateUp()
         } else {
             currentSection = null
@@ -620,6 +637,7 @@ internal fun SettingsScreen(
                 onToggleSpoofing = guardedToggleSpoofing,
                 locationLabel = locationLabel,
                 onAction = onAction,
+                scrollToCapture = openCaptureSetup,
                 onCheckCompassService = onCheckCompassService,
                 onTestCompassDetection = onTestCompassDetection,
                 launchableApps = launchableApps,

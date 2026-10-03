@@ -181,6 +181,14 @@ internal sealed class SettingsAction {
         val packageName: String,
     ) : SettingsAction()
 
+    data object RestoreCaptureDefaultBrowser : SettingsAction()
+
+    data object ClearCaptureSetupReset : SettingsAction()
+
+    data class CaptureDefaultBrowserChecked(
+        val isDefault: Boolean,
+    ) : SettingsAction()
+
     data class SetLaunchAfterLinkPackage(
         val packageName: String?,
     ) : SettingsAction()

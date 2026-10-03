@@ -37,6 +37,7 @@ import com.locationjoystick.feature.onboarding.api.ONBOARDING_ROUTE
 import com.locationjoystick.feature.routes.api.ROUTES_ROUTE
 import com.locationjoystick.feature.routes.api.ROUTE_CREATOR_ROUTE
 import com.locationjoystick.feature.routes.api.ROUTE_PASTE_CREATOR_ROUTE
+import com.locationjoystick.feature.settings.api.SETTINGS_CAPTURE_ROUTE
 import com.locationjoystick.feature.settings.api.SETTINGS_ROUTE
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -200,6 +201,7 @@ internal fun shouldSkipIdleRedirect(route: String?): Boolean =
     route == IDLE_ROUTE ||
         route == ONBOARDING_ROUTE ||
         route == SETTINGS_ROUTE ||
+        route == SETTINGS_CAPTURE_ROUTE ||
         route == ROUTE_PASTE_CREATOR_ROUTE ||
         route == FAVORITES_ROUTE ||
         route == CAPTURE_ROUTE

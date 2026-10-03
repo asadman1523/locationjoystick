@@ -98,15 +98,15 @@ Collect map links from other apps into an on-device list, then save them as a ro
 
 Capture mode is **off** by default. Capture is a top-level destination listed on Home and in the navigation drawer next to Map / Routes / Favorites.
 
-The app verifies only one setup fact: whether it is the default browser. This is the only gate. Captured points stay stored while gated and reappear after setup.
+Setup lives in **Settings > Menus > Capture**. The app verifies only one setup fact: whether it is the default browser. This is the only gate. While gated, the Capture screen shows one card with an **Open Capture setup** button; it navigates to `SETTINGS_CAPTURE_ROUTE` (Settings opened on Menus, scrolled to Capture; Back returns to the Capture screen). Captured points stay stored while gated and reappear after setup.
 
 **Setup steps:**
 1. Tap **Default browser** to open Android's Default apps settings. Set this app as **Browser app**. (On Samsung, use the Default apps settings directly rather than a role-request dialog.)
-2. Return to Capture — it rechecks automatically.
+2. Return to Settings — it rechecks automatically.
 3. Turn on **supported links** for this app in its Android settings. The app cannot verify this, so verify it yourself.
 4. Turn off **Open supported links** for Google Maps. With this off, Maps links come to this app instead of opening Maps directly.
 
-Once setup is complete, the setup cards disappear and the feature UI shows the toggle and controls.
+Once setup is complete, the setup cards disappear and Settings shows the toggle and controls; the Capture screen shows the full list UI.
 
 ### Configuration
 
@@ -116,11 +116,11 @@ After setup is complete:
 - **List** / **Jump** — independent checkboxes (both optional). List appends each tapped location to the list; Jump teleports immediately via `TeleportUseCase`. Both can be on, off, or one each.
 - **Pass-through browser** — opens an in-app browser picker, used when Capture mode is off or both List and Jump are off (see the intercept table below).
 
-Capture mode, List, and Jump are **not** part of `ExportData` and are per-device. They reset when this app is no longer the default browser, managed through **Restore default browser** in the top-bar three-dot menu.
+Capture mode, List, and Jump are **not** part of `ExportData` and are per-device. They reset when this app is no longer the default browser, managed through **Restore default browser** in Settings > Menus > Capture.
 
 ### Also in Settings
 
-The Capture toggles, List/Jump checkboxes, and pass-through browser picker are also available as an inline section in **Settings > Menus**, mirroring other toggle-based features. Both surfaces read and write the same `CaptureCoordinatesRepository`, so changes made in either place reflect everywhere. Setup steps remain on the Capture screen only.
+The Capture toggles, List/Jump checkboxes, and pass-through browser picker are also available on the Capture screen. Both surfaces read and write the same `CaptureCoordinatesRepository`, so changes made in either place reflect everywhere. Setup steps and **Restore default browser** exist in Settings only.
 
 ### Intercept Behavior
 
@@ -155,7 +155,7 @@ Captured points are listed in an orange-outlined read-only box, skipping exact d
 
 **Copy** / **Last** (remove most recent) / **Clear** sit on one icon row above the route-name field. **Save as route** appears below the name field and requires ≥2 points. The new route is added to Routes with the specified name.
 
-**Restore default browser** (top-bar three-dot menu) clears Capture mode, List, and Jump, and opens Android's Default apps settings so the user can restore their usual browser. It sets a per-device flag so the setup cards return even though the app still holds the browser role. Captured points, the pass-through browser, and the stored previous browser holder are kept (Android will not reassign the previous browser back programmatically). The flag clears when the user taps the default-browser card again or when this app is no longer the default browser.
+**Restore default browser** (Settings > Menus > Capture) clears Capture mode, List, and Jump, and opens Android's Default apps settings so the user can restore their usual browser. It sets a per-device flag so the setup cards return even though the app still holds the browser role. Captured points, the pass-through browser, and the stored previous browser holder are kept (Android will not reassign the previous browser back programmatically). The flag clears when the user taps the default-browser card again or when this app is no longer the default browser.
 
 ### Launch Another App After a Link
 
@@ -174,6 +174,6 @@ The package is stored per-device in DataStore (`CaptureCoordinatesRepository.lau
 | **Automatic Manifest** | Intent filters on `MainActivity`: HTTPS own domain (`autoVerify`) + custom scheme + `geo:` + `google.navigation:` + `ACTION_SEND` text/plain |
 | **Capture Manifest** | Intent filters on `LinkInterceptorActivity`: catch-all `http`/`https` VIEW + BROWSABLE, and Google Maps hosts |
 | **Capture Intercept** | `LinkInterceptorActivity.kt`, `CaptureCoordinatesRepository.kt` (`:core:data`) |
-| **Capture UI** | `CaptureCoordinatesForm` (`:core:designsystem`, shared with onboarding cards) + `SettingsMenusSubScreen` (`:feature:settings:impl`) |
+| **Capture UI** | `CaptureCoordinatesForm` + `CaptureSetupSteps` + `CaptureRestoreDialog` (`:core:designsystem`) + `SettingsMenusSubScreen` (hosts setup) (`:feature:settings:impl`) |
 | **Launch after link** | `LaunchAfterLinkUseCase` (`:core:data`), called by `LinkInterceptorActivity` and `MapViewModel` |
 | **Capture List** | `CaptureCoordinatesViewModel.kt` (`:feature:map:impl`), `CaptureLink.kt` (`:core:common/util`) |

@@ -85,4 +85,12 @@
     <string name="paste_first_favorite">"先保存为收藏"</string>
     <string name="paste_save_favorite">"保存收藏"</string>
     <string name="roaming_spiral_description">从当前所在位置绕出螺旋形路径，先向外展开再收拢回来。一圈即为一次完整的展开与收拢，与沿保存路线站点绕圈不同。</string>
+    <string name="capture_setup_needed_title">"需要设置"</string>
+    <string name="capture_setup_needed_desc">"采集功能需要一次性设置。请在设置中将本应用设为默认浏览器。"</string>
+    <string name="capture_setup_needed_action">"打开采集设置"</string>
+    <string name="capture_restore_default_browser">"恢复默认浏览器"</string>
+    <string name="capture_restore_dialog_title">"恢复默认浏览器？"</string>
+    <string name="capture_restore_dialog_checkbox">"我了解这会关闭采集功能，我需要在 Android 设置中把默认浏览器改回来。"</string>
+    <string name="capture_restore_dialog_confirm">"恢复"</string>
+    <string name="capture_restore_dialog_cancel">"取消"</string>
 </resources>

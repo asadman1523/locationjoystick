@@ -103,6 +103,7 @@ class SettingsViewModel
             val jumpEnabled: Boolean,
             val previousBrowserPackage: String?,
             val launchAfterLinkPackage: String?,
+            val setupReset: Boolean,
         )
 
         private val captureSnapshot: Flow<CaptureSnapshot> =
@@ -112,8 +113,16 @@ class SettingsViewModel
                 captureCoordinatesRepository.jumpEnabled,
                 captureCoordinatesRepository.previousBrowserPackage,
                 captureCoordinatesRepository.launchAfterLinkPackage,
-            ) { modeEnabled, captureEnabled, jumpEnabled, previousBrowserPackage, launchAfterLinkPackage ->
-                CaptureSnapshot(modeEnabled, captureEnabled, jumpEnabled, previousBrowserPackage, launchAfterLinkPackage)
+                captureCoordinatesRepository.setupReset,
+            ) { values ->
+                CaptureSnapshot(
+                    modeEnabled = values[0] as Boolean,
+                    captureEnabled = values[1] as Boolean,
+                    jumpEnabled = values[2] as Boolean,
+                    previousBrowserPackage = values[3] as String?,
+                    launchAfterLinkPackage = values[4] as String?,
+                    setupReset = values[5] as Boolean,
+                )
             }
 
         init {
@@ -276,6 +285,7 @@ class SettingsViewModel
                     captureEnabled = capture.captureEnabled,
                     jumpEnabled = capture.jumpEnabled,
                     capturePreviousBrowserPackage = capture.previousBrowserPackage,
+                    captureSetupReset = capture.setupReset,
                     launchAfterLinkPackage = capture.launchAfterLinkPackage,
                     compassTestTargetPackage = compassTestTargetPackage,
                     isCompassServiceGranted = isServiceGranted,
@@ -482,6 +492,19 @@ class SettingsViewModel
 
         fun setCapturePreviousBrowserPackage(packageName: String) {
             viewModelScope.launch { captureCoordinatesRepository.setPreviousBrowserPackage(packageName) }
+        }
+
+        fun restoreCaptureDefaultBrowser() {
+            viewModelScope.launch { captureCoordinatesRepository.resetSetup() }
+        }
+
+        fun clearCaptureSetupReset() {
+            viewModelScope.launch { captureCoordinatesRepository.clearSetupReset() }
+        }
+
+        /** A reset only holds while this app still owns the browser role; once it does not, setup is due anyway. */
+        fun onCaptureDefaultBrowserChecked(isDefault: Boolean) {
+            if (!isDefault && uiState.value.captureSetupReset) clearCaptureSetupReset()
         }
 
         fun setLaunchAfterLinkPackage(packageName: String?) {

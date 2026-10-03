@@ -85,4 +85,12 @@
     <string name="paste_first_favorite">"將第一個點儲存為收藏"</string>
     <string name="paste_save_favorite">"儲存收藏"</string>
     <string name="roaming_spiral_description">從目前所在位置繞出螺旋形路徑，先向外展開再收攏回來。一圈即為一次完整的展開與收攏，與沿已儲存路線的站點繞圈不同。</string>
+    <string name="capture_setup_needed_title">"需要設定"</string>
+    <string name="capture_setup_needed_desc">"擷取功能需要一次性設定。請在設定中將本應用程式設為預設瀏覽器。"</string>
+    <string name="capture_setup_needed_action">"開啟擷取設定"</string>
+    <string name="capture_restore_default_browser">"還原預設瀏覽器"</string>
+    <string name="capture_restore_dialog_title">"還原預設瀏覽器？"</string>
+    <string name="capture_restore_dialog_checkbox">"我了解這會關閉擷取功能，且需要在 Android 設定中把預設瀏覽器改回來。"</string>
+    <string name="capture_restore_dialog_confirm">"還原"</string>
+    <string name="capture_restore_dialog_cancel">"取消"</string>
 </resources>

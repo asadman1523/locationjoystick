@@ -328,6 +328,39 @@ class SettingsViewModelDraftTest {
         }
 
     @Test
+    fun `restoreCaptureDefaultBrowser turns capture off and sets captureSetupReset`() =
+        runTest(testDispatcher) {
+            backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }
+            viewModel.setCaptureModeEnabled(true)
+            viewModel.setCaptureEnabled(true)
+            viewModel.setJumpEnabled(true)
+
+            viewModel.restoreCaptureDefaultBrowser()
+
+            val state = viewModel.uiState.value
+            assertFalse(state.captureModeEnabled)
+            assertFalse(state.captureEnabled)
+            assertFalse(state.jumpEnabled)
+            assertTrue(state.captureSetupReset)
+        }
+
+    @Test
+    fun `captureSetupReset clears when app is no longer default browser or setup is tapped`() =
+        runTest(testDispatcher) {
+            backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }
+            viewModel.restoreCaptureDefaultBrowser()
+            viewModel.onCaptureDefaultBrowserChecked(true)
+            assertTrue(viewModel.uiState.value.captureSetupReset)
+
+            viewModel.onCaptureDefaultBrowserChecked(false)
+            assertFalse(viewModel.uiState.value.captureSetupReset)
+
+            viewModel.restoreCaptureDefaultBrowser()
+            viewModel.clearCaptureSetupReset()
+            assertFalse(viewModel.uiState.value.captureSetupReset)
+        }
+
+    @Test
     fun `setLaunchAfterLinkPackage persists without marking dirty`() =
         runTest(testDispatcher) {
             backgroundScope.launch(testDispatcher) { viewModel.uiState.collect {} }

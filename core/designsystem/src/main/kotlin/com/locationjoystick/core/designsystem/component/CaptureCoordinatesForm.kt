@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,7 +87,8 @@ data class CaptureRouteSaveState(
 
 /**
  * Capture-mode setup guidance (default-browser role, Google Maps links, guide link) plus the
- * passthrough-browser picker. While `isDefaultBrowser` is false only the setup is shown — see
+ * passthrough-browser picker. The setup steps render in Settings > Menus; while `isDefaultBrowser`
+ * is false the Capture screen shows only a pointer there (`onOpenSetup`) — see
  * docs/features/location-links.md (Opt-in Tier).
  */
 data class CaptureSetupState(
@@ -95,9 +97,10 @@ data class CaptureSetupState(
     val browserChoices: List<CaptureBrowserChoice>,
     val selectedBrowserPackage: String?,
     val onSelectBrowser: (String) -> Unit,
-    val onRequestDefaultBrowser: () -> Unit,
-    val onOpenMapsLinks: () -> Unit,
+    val onRequestDefaultBrowser: () -> Unit = {},
+    val onOpenMapsLinks: () -> Unit = {},
     val onOpenSetupGuide: () -> Unit,
+    val onOpenSetup: () -> Unit = {},
 )
 
 @Composable
@@ -267,7 +270,7 @@ fun CaptureCoordinatesForm(
                 }
             }
         } else {
-            CaptureSetupSteps(state = captureSetup)
+            CaptureSetupNeeded(onOpenSetup = captureSetup.onOpenSetup)
         }
         if (showClose) {
             TextButton(
@@ -326,7 +329,59 @@ fun CaptureToggleStep(
 }
 
 @Composable
-private fun CaptureSetupSteps(
+private fun CaptureSetupNeeded(onOpenSetup: () -> Unit) {
+    LjCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(LjSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(LjSpacing.sm),
+        ) {
+            Text(
+                text = stringResource(R.string.capture_setup_needed_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.capture_setup_needed_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(onClick = onOpenSetup, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.capture_setup_needed_action))
+            }
+        }
+    }
+}
+
+/** Confirm dialog for "Restore default browser" — see docs/features/location-links.md (Opt-in Tier). */
+@Composable
+fun CaptureRestoreDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var understood by rememberSaveable { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.capture_restore_dialog_title)) },
+        text = {
+            LjCheckboxRow(
+                checked = understood,
+                onCheckedChange = { understood = it },
+                title = stringResource(R.string.capture_restore_dialog_checkbox),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = understood) {
+                Text(stringResource(R.string.capture_restore_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.capture_restore_dialog_cancel)) }
+        },
+    )
+}
+
+/** Public so Settings > Menus can host the setup — see docs/features/location-links.md (Opt-in Tier). */
+@Composable
+fun CaptureSetupSteps(
     state: CaptureSetupState,
     modifier: Modifier = Modifier,
 ) {
@@ -514,8 +569,6 @@ private fun CaptureCoordinatesFormPreview() {
                     browserChoices = emptyList(),
                     selectedBrowserPackage = null,
                     onSelectBrowser = {},
-                    onRequestDefaultBrowser = {},
-                    onOpenMapsLinks = {},
                     onOpenSetupGuide = {},
                 ),
             capturePoints =
@@ -559,8 +612,6 @@ private fun CaptureCoordinatesFormSetupPreview() {
                     browserChoices = emptyList(),
                     selectedBrowserPackage = null,
                     onSelectBrowser = {},
-                    onRequestDefaultBrowser = {},
-                    onOpenMapsLinks = {},
                     onOpenSetupGuide = {},
                 ),
             capturePoints =
@@ -595,8 +646,6 @@ private fun CaptureSetupStepsPreview() {
                     browserChoices = emptyList(),
                     selectedBrowserPackage = null,
                     onSelectBrowser = {},
-                    onRequestDefaultBrowser = {},
-                    onOpenMapsLinks = {},
                     onOpenSetupGuide = {},
                 ),
         )

@@ -85,4 +85,12 @@
     <string name="paste_first_favorite">"Save first as favorite"</string>
     <string name="paste_save_favorite">"Save favorite"</string>
     <string name="roaming_spiral_description">Walks a spiral around where you are now, opening out then tightening in. One loop is one full expand and contract. This is separate from circling around stops on a saved route.</string>
+    <string name="capture_setup_needed_title">"Setup needed"</string>
+    <string name="capture_setup_needed_desc">"Capture needs a one-time setup. Set this app as your default browser in Settings."</string>
+    <string name="capture_setup_needed_action">"Open Capture setup"</string>
+    <string name="capture_restore_default_browser">"Restore default browser"</string>
+    <string name="capture_restore_dialog_title">"Restore default browser?"</string>
+    <string name="capture_restore_dialog_checkbox">"I understand this turns Capture off and I need to set my default browser back in Android settings."</string>
+    <string name="capture_restore_dialog_confirm">"Restore"</string>
+    <string name="capture_restore_dialog_cancel">"Cancel"</string>
 </resources>

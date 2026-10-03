@@ -88,19 +88,6 @@ class CaptureCoordinatesViewModel
             viewModelScope.launch { captureRepository.setPreviousBrowserPackage(trimmed) }
         }
 
-        fun restoreDefaultBrowser() {
-            viewModelScope.launch { captureRepository.resetSetup() }
-        }
-
-        fun clearSetupReset() {
-            viewModelScope.launch { captureRepository.clearSetupReset() }
-        }
-
-        /** A reset only holds while this app still owns the browser role; once it does not, setup is due anyway. */
-        fun onDefaultBrowserChecked(isDefault: Boolean) {
-            if (!isDefault && _uiState.value.setupReset) clearSetupReset()
-        }
-
         fun setCaptureModeEnabled(enabled: Boolean) {
             viewModelScope.launch { captureRepository.setCaptureModeEnabled(enabled) }
         }

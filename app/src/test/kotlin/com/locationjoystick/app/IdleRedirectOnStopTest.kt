@@ -8,6 +8,7 @@ import com.locationjoystick.feature.onboarding.api.ONBOARDING_ROUTE
 import com.locationjoystick.feature.routes.api.ROUTES_ROUTE
 import com.locationjoystick.feature.routes.api.ROUTE_CREATOR_ROUTE
 import com.locationjoystick.feature.routes.api.ROUTE_PASTE_CREATOR_ROUTE
+import com.locationjoystick.feature.settings.api.SETTINGS_CAPTURE_ROUTE
 import com.locationjoystick.feature.settings.api.SETTINGS_ROUTE
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -19,6 +20,7 @@ class IdleRedirectOnStopTest {
         assertTrue(shouldSkipIdleRedirect(IDLE_ROUTE))
         assertTrue(shouldSkipIdleRedirect(ONBOARDING_ROUTE))
         assertTrue(shouldSkipIdleRedirect(SETTINGS_ROUTE))
+        assertTrue(shouldSkipIdleRedirect(SETTINGS_CAPTURE_ROUTE))
     }
 
     @Test
