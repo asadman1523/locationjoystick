@@ -55,6 +55,9 @@ applied **only at the MapLibre presentation edge**, in both directions, via
 Everything else — `AppSettings`, favorites, routes, `LocationRepository`, `LocationManager` mock
 fixes, Nominatim, OSRM, exports — stays WGS-84. Never persist or spoof a GCJ-02 coordinate.
 
+Map callbacks (style apply, initial camera, tap, long-press) read the latest tile source, so switching
+in Settings applies to every open map screen without recreating it.
+
 ### Attribution
 
 MapLibre's built-in attribution button is disabled on all surfaces, so each one renders
