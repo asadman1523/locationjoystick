@@ -13,5 +13,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
+    testImplementation(libs.orgjson)
     testImplementation(libs.kotlinx.coroutines.test)
 }

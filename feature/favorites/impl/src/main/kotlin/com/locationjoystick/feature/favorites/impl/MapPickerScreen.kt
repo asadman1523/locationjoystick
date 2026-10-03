@@ -1,7 +1,6 @@
 package com.locationjoystick.feature.favorites.impl
 
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +33,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.locationjoystick.core.common.constants.AppConstants
+import com.locationjoystick.core.common.geocoding.Geocoding
 import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.UiConstants
 import com.locationjoystick.core.designsystem.component.LjMapIconButton
@@ -51,16 +51,11 @@ import com.locationjoystick.core.model.MapTileSource
 import com.locationjoystick.core.model.RecentSearch
 import com.locationjoystick.core.overlay.OverlayService
 import com.locationjoystick.feature.favorites.impl.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.sources.GeoJsonSource
-import java.net.HttpURLConnection
-import java.net.URL
 import org.maplibre.android.geometry.LatLng as MapLatLng
 
 @Composable
@@ -174,32 +169,8 @@ internal fun MapPickerScreen(
             val pos = effectivePosition()
             if (pos != null) {
                 suggestedName = ""
-                withContext(Dispatchers.IO) {
-                    try {
-                        val url = URL("${AppConstants.NominatimConstants.REVERSE_URL}?lat=${pos.first}&lon=${pos.second}&format=json")
-                        val conn = url.openConnection() as HttpURLConnection
-                        conn.setRequestProperty("User-Agent", "locationjoystick/1.0")
-                        conn.connectTimeout = AppConstants.NominatimConstants.CONNECT_TIMEOUT_MS
-                        conn.readTimeout = AppConstants.NominatimConstants.READ_TIMEOUT_MS
-                        try {
-                            val json = JSONObject(conn.inputStream.bufferedReader().readText())
-                            val address = json.optJSONObject("address")
-                            if (address != null) {
-                                val city =
-                                    address
-                                        .optString("city")
-                                        .ifEmpty { address.optString("town") }
-                                        .ifEmpty { address.optString("village") }
-                                        .ifEmpty { address.optString("state") }
-                                val country = address.optString("country")
-                                suggestedName = listOf(country, city).filter { it.isNotEmpty() }.joinToString(", ")
-                            }
-                        } finally {
-                            conn.disconnect()
-                        }
-                    } catch (e: Exception) {
-                        Log.e("MapPickerScreen", "Reverse geocode failed", e)
-                    }
+                Geocoding.provider.reverse(pos.first, pos.second)?.let {
+                    suggestedName = listOfNotNull(it.country, it.locality ?: it.region).joinToString(", ")
                 }
             }
         }

@@ -1,28 +1,20 @@
 package com.locationjoystick.core.location
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
-import com.locationjoystick.core.common.constants.AppConstants
+import com.locationjoystick.core.common.geocoding.Geocoding
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 import javax.inject.Inject
-
-private const val TAG = "SpoofToggleViewModel"
 
 /**
  * Thin Hilt ViewModel wrapping [MapController.isSpoofing] / [MapController.toggleSpoofing] so any
@@ -71,35 +63,11 @@ class SpoofToggleViewModel
         private suspend fun reverseGeocode(
             lat: Double,
             lon: Double,
-        ): String? =
-            withContext(Dispatchers.IO) {
-                try {
-                    val url = URL("${AppConstants.NominatimConstants.REVERSE_URL}?lat=$lat&lon=$lon&format=json")
-                    val conn = url.openConnection() as HttpURLConnection
-                    conn.setRequestProperty("User-Agent", "locationjoystick/1.0")
-                    conn.connectTimeout = AppConstants.NominatimConstants.CONNECT_TIMEOUT_MS
-                    conn.readTimeout = AppConstants.NominatimConstants.READ_TIMEOUT_MS
-                    try {
-                        val json = JSONObject(conn.inputStream.bufferedReader().readText())
-                        val address = json.optJSONObject("address") ?: return@withContext null
-                        val locality =
-                            address.optString("city").takeIf { it.isNotEmpty() }
-                                ?: address.optString("town").takeIf { it.isNotEmpty() }
-                                ?: address.optString("village").takeIf { it.isNotEmpty() }
-                                ?: address.optString("municipality").takeIf { it.isNotEmpty() }
-                                ?: return@withContext null
-                        val country =
-                            address.optString("country").takeIf { it.isNotEmpty() }
-                                ?: return@withContext locality
-                        "$locality, $country"
-                    } finally {
-                        conn.disconnect()
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Reverse geocode failed", e)
-                    null
-                }
-            }
+        ): String? {
+            val r = Geocoding.provider.reverse(lat, lon) ?: return null
+            val locality = r.locality ?: return null
+            return r.country?.let { "$locality, $it" } ?: locality
+        }
     }
 
 data class SpoofToggleState(

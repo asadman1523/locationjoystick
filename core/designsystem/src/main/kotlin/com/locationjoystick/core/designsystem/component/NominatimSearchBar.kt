@@ -1,6 +1,5 @@
 package com.locationjoystick.core.designsystem.component
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -31,22 +30,14 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.locationjoystick.core.common.constants.AppConstants
-import com.locationjoystick.core.common.util.NominatimResult
-import com.locationjoystick.core.common.util.NominatimSearchClient
+import com.locationjoystick.core.common.geocoding.GeocodeResult
+import com.locationjoystick.core.common.geocoding.Geocoding
 import com.locationjoystick.core.common.util.parseRawLatLng
 import com.locationjoystick.core.designsystem.LjIcons
 import com.locationjoystick.core.designsystem.LjSpacing
 import com.locationjoystick.core.designsystem.R
 import com.locationjoystick.core.model.RecentSearch
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLEncoder
-
-private const val TAG = "NominatimSearchBar"
 
 @Composable
 fun NominatimSearchBar(
@@ -56,7 +47,7 @@ fun NominatimSearchBar(
     onSearchCommitted: ((displayName: String, lat: Double, lon: Double) -> Unit)? = null,
 ) {
     var query by remember { mutableStateOf("") }
-    var results by remember { mutableStateOf<List<NominatimResult>>(emptyList()) }
+    var results by remember { mutableStateOf<List<GeocodeResult>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(query) {
@@ -64,7 +55,7 @@ fun NominatimSearchBar(
         if (rawCoords != null) {
             results =
                 listOf(
-                    NominatimResult(
+                    GeocodeResult(
                         lat = rawCoords.latitude,
                         lon = rawCoords.longitude,
                         displayName = "Go to ${rawCoords.latitude}, ${rawCoords.longitude}",
@@ -79,7 +70,7 @@ fun NominatimSearchBar(
         }
         delay(AppConstants.NominatimConstants.SEARCH_DEBOUNCE_MS)
         isLoading = true
-        results = nominatimSearch.search(query) ?: emptyList()
+        results = Geocoding.provider.search(query)
         isLoading = false
     }
 
@@ -184,39 +175,3 @@ fun NominatimSearchBar(
         }
     }
 }
-
-/** Process-wide so every search bar shares one cache and one 1 request/second spacing. */
-private val nominatimSearch = NominatimSearchClient(::fetchNominatim)
-
-private suspend fun fetchNominatim(query: String): List<NominatimResult> =
-    withContext(Dispatchers.IO) {
-        try {
-            val encoded = URLEncoder.encode(query, "UTF-8")
-            val url = URL("${AppConstants.NominatimConstants.SEARCH_URL}?q=$encoded&format=json&limit=5")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.setRequestProperty("User-Agent", "locationjoystick/1.0")
-            conn.connectTimeout = AppConstants.NominatimConstants.CONNECT_TIMEOUT_MS
-            conn.readTimeout = AppConstants.NominatimConstants.READ_TIMEOUT_MS
-            try {
-                val responseText = conn.inputStream.bufferedReader().readText()
-                val array = JSONArray(responseText)
-                (0 until minOf(array.length(), 5)).mapNotNull { i ->
-                    try {
-                        val obj = array.getJSONObject(i)
-                        NominatimResult(
-                            lat = obj.getDouble("lat"),
-                            lon = obj.getDouble("lon"),
-                            displayName = obj.getString("display_name"),
-                        )
-                    } catch (e: Exception) {
-                        null
-                    }
-                }
-            } finally {
-                conn.disconnect()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Search failed", e)
-            throw e
-        }
-    }

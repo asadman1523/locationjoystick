@@ -1,6 +1,7 @@
 package com.locationjoystick.core.common.util
 
 import com.locationjoystick.core.common.constants.AppConstants
+import com.locationjoystick.core.common.geocoding.GeocodeResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -11,7 +12,7 @@ import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NominatimSearchClientTest {
-    private val hit = listOf(NominatimResult(1.0, 2.0, "Paris"))
+    private val hit = listOf(GeocodeResult(1.0, 2.0, "Paris"))
 
     @Test
     fun `repeat query ignoring case and whitespace is served from cache`() =

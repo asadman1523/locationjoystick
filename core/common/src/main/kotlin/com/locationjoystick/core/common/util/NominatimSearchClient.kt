@@ -1,16 +1,11 @@
 package com.locationjoystick.core.common.util
 
 import com.locationjoystick.core.common.constants.AppConstants
+import com.locationjoystick.core.common.geocoding.GeocodeResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-
-data class NominatimResult(
-    val lat: Double,
-    val lon: Double,
-    val displayName: String,
-)
 
 /**
  * Cached, rate-spaced wrapper around a Nominatim search call. Repeat queries are served from an
@@ -20,11 +15,11 @@ data class NominatimResult(
  * @param fetch performs the request; must throw on any failure.
  */
 class NominatimSearchClient(
-    private val fetch: suspend (String) -> List<NominatimResult>,
+    private val fetch: suspend (String) -> List<GeocodeResult>,
     private val nowMs: () -> Long = System::currentTimeMillis,
 ) {
     private val cache =
-        TtlLruCache<String, List<NominatimResult>>(
+        TtlLruCache<String, List<GeocodeResult>>(
             AppConstants.NominatimConstants.CACHE_MAX_ENTRIES,
             AppConstants.NominatimConstants.CACHE_TTL_MS,
             nowMs,
@@ -33,7 +28,7 @@ class NominatimSearchClient(
     private var lastStartMs = Long.MIN_VALUE / 2
 
     /** Returns results, or null if the request failed and nothing is cached. */
-    suspend fun search(query: String): List<NominatimResult>? {
+    suspend fun search(query: String): List<GeocodeResult>? {
         val key = query.trim().lowercase()
         cache.getFresh(key)?.let { return it }
         return mutex.withLock {
