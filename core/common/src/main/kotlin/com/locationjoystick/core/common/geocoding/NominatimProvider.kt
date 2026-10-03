@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -18,20 +19,13 @@ private const val SEARCH_LIMIT = 5
 class NominatimProvider : GeocodingProvider {
     private val searchClient = NominatimSearchClient(::fetchSearch)
 
-    override suspend fun search(query: String): List<GeocodeResult> = searchClient.search(query) ?: emptyList()
+    override suspend fun search(query: String): List<GeocodeResult> =
+        searchClient.search(query) ?: throw IOException("Nominatim search failed")
 
     override suspend fun reverse(
         lat: Double,
         lon: Double,
-    ): ReverseGeocodeResult? =
-        try {
-            parseReverseResponse(get("${AppConstants.NominatimConstants.REVERSE_URL}?lat=$lat&lon=$lon&format=json"))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Reverse geocode failed", e)
-            null
-        }
+    ): ReverseGeocodeResult? = parseReverseResponse(get("${AppConstants.NominatimConstants.REVERSE_URL}?lat=$lat&lon=$lon&format=json"))
 
     private suspend fun fetchSearch(query: String): List<GeocodeResult> =
         try {

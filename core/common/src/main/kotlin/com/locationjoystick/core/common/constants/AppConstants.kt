@@ -265,6 +265,11 @@ object AppConstants {
         const val READ_TIMEOUT_MS = 5000
     }
 
+    object GeocodingConstants {
+        /** How long a geocoding provider that failed is skipped before being tried again. */
+        const val PROVIDER_COOLDOWN_MS = 10 * 60 * 1000L
+    }
+
     object ElevationConstants {
         const val BASE_URL = "https://api.open-meteo.com/v1/elevation"
         const val CONNECT_TIMEOUT_MS = 5000

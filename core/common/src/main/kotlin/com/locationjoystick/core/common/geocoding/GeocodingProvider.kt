@@ -19,17 +19,17 @@ data class ReverseGeocodeResult(
  * JSON, and maps the response to the unified types above.
  */
 interface GeocodingProvider {
-    /** Returns an empty list on failure. */
+    /** Throws on failure; an empty list means nothing found. */
     suspend fun search(query: String): List<GeocodeResult>
 
-    /** Returns null when nothing was found or on failure. */
+    /** Throws on failure; null means nothing found. */
     suspend fun reverse(
         lat: Double,
         lon: Double,
     ): ReverseGeocodeResult?
 }
 
-/** Process-wide entry so every caller shares one provider (cache and request spacing). */
+/** Process-wide entry so every caller shares one provider chain (cache, request spacing, cooldown). */
 object Geocoding {
-    val provider: GeocodingProvider = NominatimProvider()
+    val provider: GeocodingProvider = FallbackGeocodingProvider(listOf(NominatimProvider(), PhotonProvider()))
 }

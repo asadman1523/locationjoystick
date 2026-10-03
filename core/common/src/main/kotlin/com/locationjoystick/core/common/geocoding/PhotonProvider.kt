@@ -7,6 +7,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -21,20 +22,13 @@ private const val SEARCH_LIMIT = 5
 class PhotonProvider : GeocodingProvider {
     private val searchClient = NominatimSearchClient(::fetchSearch)
 
-    override suspend fun search(query: String): List<GeocodeResult> = searchClient.search(query) ?: emptyList()
+    override suspend fun search(query: String): List<GeocodeResult> =
+        searchClient.search(query) ?: throw IOException("Photon search failed")
 
     override suspend fun reverse(
         lat: Double,
         lon: Double,
-    ): ReverseGeocodeResult? =
-        try {
-            parsePhotonReverseResponse(get("${AppConstants.PhotonConstants.BASE_URL}/reverse?lat=$lat&lon=$lon&limit=1"))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Reverse geocode failed", e)
-            null
-        }
+    ): ReverseGeocodeResult? = parsePhotonReverseResponse(get("${AppConstants.PhotonConstants.BASE_URL}/reverse?lat=$lat&lon=$lon&limit=1"))
 
     private suspend fun fetchSearch(query: String): List<GeocodeResult> =
         try {
