@@ -1,6 +1,5 @@
 package com.locationjoystick.core.data.di
 
-import android.content.Context
 import com.locationjoystick.core.data.FavoriteRepository
 import com.locationjoystick.core.data.LocationRepository
 import com.locationjoystick.core.data.RoamingRepository
@@ -14,7 +13,6 @@ import com.locationjoystick.core.routing.RouteReplayEngine
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -23,10 +21,7 @@ import javax.inject.Singleton
 object DataModule {
     @Provides
     @Singleton
-    fun provideRouteRepository(
-        routeDao: RouteDao,
-        @ApplicationContext context: Context,
-    ): RouteRepository = RouteRepository(routeDao, context)
+    fun provideRouteRepository(routeDao: RouteDao): RouteRepository = RouteRepository(routeDao)
 
     @Provides
     @Singleton

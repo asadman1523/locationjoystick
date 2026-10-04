@@ -242,7 +242,7 @@ fun SettingsRoute(
         isRooted = isRooted,
         languageTag = languageTag,
         hotLocationTree = viewModel.hotLocationTree.collectAsStateWithLifecycle().value,
-        hotRouteTree = viewModel.hotRouteTree,
+        hotRouteTree = viewModel.hotRouteTree.collectAsStateWithLifecycle().value,
         onOpenDrawer = onOpenDrawer,
         isSpoofing = spoofToggle.isSpoofing,
         onToggleSpoofing = spoofToggle.onToggle,

@@ -109,6 +109,7 @@ The list is `docs/wiki/hot/locations.json`, published with the wiki at `https://
 ```
 
 - A body is accepted only if `schema` is `1`, `locations` is non-empty and every entry has all five fields; otherwise the whole body is rejected. Unknown extra fields are ignored. Publish an incompatible format under a new `schema` number: old apps keep their last good copy.
+- Fetch/cache code is the shared `WikiJsonCache` (also used by hot routes, docs/features/routes.md).
 - The same file is packed into the APK as the seed (`assets.srcDir` in `:core:data`). `HotLocationsRepository.locations` serves the cached copy (`filesDir/hot_locations.json`), else the seed.
 - On app open (`LjApplication`), `refreshIfStale()` fetches silently when the cache is older than 24 h (file modified time as the clock; no toggle, no DataStore key). A failed check keeps the last good copy and also waits 24 h; with no cache it retries next launch.
 - After a successful refresh, if "Show hot locations" is on, `upsertHotLocations` reconciles `hot_*` favorites to the new list. New entries are not auto-selected: they show unchecked in the Settings tree.

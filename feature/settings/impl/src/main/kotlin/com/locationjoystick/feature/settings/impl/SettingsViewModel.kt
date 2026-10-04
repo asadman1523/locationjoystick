@@ -18,6 +18,7 @@ import com.locationjoystick.core.common.util.RandomCode
 import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.FavoriteRepository
 import com.locationjoystick.core.data.HotLocationsRepository
+import com.locationjoystick.core.data.HotRoutesRepository
 import com.locationjoystick.core.data.RouteRepository
 import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.datastore.SettingsSnapshot
@@ -64,6 +65,7 @@ class SettingsViewModel
         private val captureCoordinatesRepository: CaptureCoordinatesRepository,
         private val favoriteRepository: FavoriteRepository,
         private val hotLocationsRepository: HotLocationsRepository,
+        private val hotRoutesRepository: HotRoutesRepository,
         private val routeRepository: RouteRepository,
         private val sensorPermissionBootstrap: SensorPermissionBootstrap,
         private val importExportRepository: ImportExportRepository,
@@ -430,7 +432,10 @@ class SettingsViewModel
                 }.stateIn(viewModelScope, SharingStarted.Eagerly, HotItemTree.Empty)
 
         fun setHotRoutesEnabled(enabled: Boolean) {
-            val allIds = RouteRepository.HOT_ROUTES.map { RouteRepository.idForRoute(it.name, it.city) }.toSet()
+            val allIds =
+                hotRoutesRepository.routes.value
+                    .map { RouteRepository.idForRoute(it.name, it.city) }
+                    .toSet()
             mutableDraft.update { draft ->
                 val currentSelectedIds = draft.selectedHotRouteIds ?: uiState.value.selectedHotRouteIds
                 val newSelectedIds = if (enabled && currentSelectedIds.isEmpty()) allIds else draft.selectedHotRouteIds
@@ -561,19 +566,19 @@ class SettingsViewModel
                     ?: false
         }
 
-        val hotRouteTree: HotItemTree =
-            run {
-                val routes = RouteRepository.HOT_ROUTES
-                HotItemTree(
-                    allIds = routes.map { RouteRepository.idForRoute(it.name, it.city) }.toSet(),
-                    byCountry =
-                        routes.groupBy { it.country }.mapValues { (_, rs) ->
-                            rs.groupBy { it.city }.mapValues { (_, items) ->
-                                items.map { HotItemEntry(RouteRepository.idForRoute(it.name, it.city), it.name) }
-                            }
-                        },
-                )
-            }
+        val hotRouteTree: StateFlow<HotItemTree> =
+            hotRoutesRepository.routes
+                .map { routes ->
+                    HotItemTree(
+                        allIds = routes.map { RouteRepository.idForRoute(it.name, it.city) }.toSet(),
+                        byCountry =
+                            routes.groupBy { it.country }.mapValues { (_, rs) ->
+                                rs.groupBy { it.city }.mapValues { (_, items) ->
+                                    items.map { HotItemEntry(RouteRepository.idForRoute(it.name, it.city), it.name) }
+                                }
+                            },
+                    )
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, HotItemTree.Empty)
 
         fun saveChanges() {
             viewModelScope.launch {
@@ -637,7 +642,7 @@ class SettingsViewModel
                     }
                     if (d.hotRoutesEnabled != null || d.selectedHotRouteIds != null) {
                         if (state.hotRoutesEnabled) {
-                            routeRepository.upsertHotRoutes(state.selectedHotRouteIds)
+                            routeRepository.upsertHotRoutes(hotRoutesRepository.routes.value, state.selectedHotRouteIds)
                         } else {
                             routeRepository.removeHotRoutes()
                         }
@@ -950,7 +955,7 @@ class SettingsViewModel
                 favoriteRepository.removeHotLocations()
             }
             if (data.hotRoutesEnabled) {
-                routeRepository.upsertHotRoutes(data.selectedHotRouteIds)
+                routeRepository.upsertHotRoutes(hotRoutesRepository.routes.value, data.selectedHotRouteIds)
             } else {
                 routeRepository.removeHotRoutes()
             }

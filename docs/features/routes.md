@@ -337,17 +337,28 @@ never goes stale.
 
 ## Hot Routes
 
-Settings → Routes → "Show hot routes" toggle (default off). When enabled, upserts curated GPX-based routes into the routes DB. When disabled, removes only entries this feature inserted.
+Settings → Routes → "Show hot routes" toggle (default off). When enabled, upserts the curated routes (see "Source of the list") into the routes DB. When disabled, removes only entries this feature inserted.
 
-Key files: `:core:data/RouteRepository.kt` (`HOT_ROUTES` list + `upsertHotRoutes`/`removeHotRoutes`), `:core:datastore/AppPreferencesDataSource.kt` (`hot_routes_enabled` key)
+Key files: `:core:data/HotRoutesRepository.kt` (list source, cache, refresh), `:core:data/RouteRepository.kt` (`upsertHotRoutes`/`removeHotRoutes`), `docs/wiki/hot/routes.json` (the list), `:core:datastore/AppPreferencesDataSource.kt` (`hot_routes_enabled` key)
 
-**Upsert rule**: match by name + city. IDs prefixed with `hot_route_`. If a route with same name already exists, coordinates are updated and original ID is preserved.
+**Upsert rule**: match by name + city (via `idForRoute`). IDs prefixed with `hot_route_`. If a route with same derived ID already exists, coordinates are updated and original ID is preserved. The upsert also deletes every `hot_route_*` route whose derived ID is no longer in the list, so a route removed upstream disappears without an app release.
 
 **Remove rule**: delete all routes whose ID starts with `hot_route_`.
 
 **Export/import**: `hotRoutesEnabled` + `selectedHotRouteIds` fields in `ExportData`. Importing a backup with it `true` re-applies the upsert.
 
-Route assets are bundled GPX files under `assets/hot_routes/`. All hot routes are saved as `RouteType.STRAIGHT` or `RouteType.GUIDED` depending on the asset.
+### Source of the list
+
+The list is `docs/wiki/hot/routes.json`, published with the wiki at `https://locationjoystick.shrtcts.fr/hot/routes.json`, waypoints inline as `[lat, lon]` pairs:
+
+```json
+{ "schema": 1, "routes": [ { "name": "", "country": "", "city": "", "type": "STRAIGHT", "waypoints": [[0.0, 0.0], [0.0, 0.0]] } ] }
+```
+
+- `type` is `STRAIGHT` or `GUIDED`; each route is saved with that `RouteType`.
+- A body is accepted only if `schema` is `1`, `routes` is non-empty and every entry has all fields, a valid `type` and at least 2 waypoints; otherwise the whole body is rejected.
+- Same refresh rules as hot locations (shared `WikiJsonCache`; see docs/features/favorites.md, "Source of the list"): seed packed into the APK, cache at `filesDir/hot_routes.json`, silent 24 h refresh on app open, last good copy kept on failure. After a successful refresh, if "Show hot routes" is on, `upsertHotRoutes` reconciles. New routes are not auto-selected.
+- Identity is `name` + `city`; keep both stable to preserve users' selections.
 
 ## Edge Cases
 

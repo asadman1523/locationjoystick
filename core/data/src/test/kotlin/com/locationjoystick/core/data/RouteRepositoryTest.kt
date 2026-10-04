@@ -1,6 +1,5 @@
 package com.locationjoystick.core.data
 
-import android.content.Context
 import app.cash.turbine.test
 import com.locationjoystick.core.common.constants.AppConstants
 import com.locationjoystick.core.model.LatLng
@@ -9,8 +8,8 @@ import com.locationjoystick.core.model.RouteType
 import com.locationjoystick.core.model.Waypoint
 import com.locationjoystick.core.testing.FakeRouteDao
 import com.locationjoystick.core.testing.FakeWaypointDao
-import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -35,7 +34,7 @@ class RouteRepositoryTest {
         Dispatchers.setMain(testDispatcher)
         waypointDao = FakeWaypointDao()
         routeDao = FakeRouteDao(waypointDao)
-        repository = RouteRepository(routeDao, mockk<Context>(relaxed = true), testDispatcher)
+        repository = RouteRepository(routeDao, testDispatcher)
     }
 
     @After
@@ -603,6 +602,42 @@ class RouteRepositoryTest {
                 assertEquals(LatLng(9.0, 9.0), temp.waypoints[0].position)
                 cancelAndIgnoreRemainingEvents()
             }
+        }
+
+    // upsertHotRoutes
+
+    private fun hot(
+        name: String,
+        type: RouteType = RouteType.STRAIGHT,
+    ) = HotRoute(name, "C", "X", type, listOf(LatLng(1.0, 2.0), LatLng(3.0, 4.0)))
+
+    private fun hotId(name: String) = RouteRepository.idForRoute(name, "X")
+
+    @Test
+    fun `upsertHotRoutes inserts selected with type and waypoints, skips unselected`() =
+        runTest {
+            val routes = listOf(hot("A", RouteType.GUIDED), hot("B"))
+            repository.upsertHotRoutes(routes, setOf(hotId("A")))
+            val all = repository.getRoutes().first()
+            assertEquals(listOf(hotId("A")), all.map { it.id })
+            assertEquals(RouteType.GUIDED, all[0].routeType)
+            assertEquals(listOf(LatLng(1.0, 2.0), LatLng(3.0, 4.0)), all[0].waypoints.map { it.position })
+        }
+
+    @Test
+    fun `upsertHotRoutes deletes hot routes no longer listed but keeps user routes`() =
+        runTest {
+            repository.upsertHotRoutes(listOf(hot("Old"), hot("Keep")), setOf(hotId("Old"), hotId("Keep")))
+            repository.insertRoute(createRoute("uuid-1", "Mine"))
+            repository.upsertHotRoutes(listOf(hot("Keep")), setOf(hotId("Old"), hotId("Keep")))
+            assertEquals(
+                setOf(hotId("Keep"), "uuid-1"),
+                repository
+                    .getRoutes()
+                    .first()
+                    .map { it.id }
+                    .toSet(),
+            )
         }
 }
 

@@ -7,6 +7,7 @@ import com.locationjoystick.core.common.util.NsdCodeManager
 import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.FavoriteRepository
 import com.locationjoystick.core.data.HotLocationsRepository
+import com.locationjoystick.core.data.HotRoutesRepository
 import com.locationjoystick.core.data.RouteRepository
 import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.datastore.AppPreferencesDataSource
@@ -70,13 +71,14 @@ class SettingsViewModelSaveTest {
         fakeDataSource = SaveTestPreferencesDataSource()
         fakeSettingsRepo = SettingsRepository(fakeDataSource)
         fakeFavoriteRepo = FavoriteRepository(FakeFavoriteDao(), ioDispatcher = testDispatcher)
-        fakeRouteRepo = RouteRepository(routeDao = FakeRouteDao(), context = context, ioDispatcher = testDispatcher)
+        fakeRouteRepo = RouteRepository(routeDao = FakeRouteDao(), ioDispatcher = testDispatcher)
         viewModel =
             SettingsViewModel(
                 settingsRepository = fakeSettingsRepo,
                 captureCoordinatesRepository = CaptureCoordinatesRepository(FakePreferencesDataStore()),
                 favoriteRepository = fakeFavoriteRepo,
                 hotLocationsRepository = HotLocationsRepository(context),
+                hotRoutesRepository = HotRoutesRepository(context),
                 routeRepository = fakeRouteRepo,
                 sensorPermissionBootstrap = SensorPermissionBootstrap(context),
                 importExportRepository = ImportExportRepository(context),

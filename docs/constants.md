@@ -31,7 +31,8 @@ All constants → `:core:common/constants/AppConstants.kt`.
 | `TopBarConstants` | Max characters for the idle Start place-name suffix |
 | `AppInfo` | Version name, fork changelog/releases URL, upstream issues/docs/troubleshooting URLs, Capture setup guide URL (`CAPTURE_GUIDE_URL`), Tap to Walk guide URL (`TAP_TO_WALK_GUIDE_URL`), Acknowledgements page URL (`ACKNOWLEDGEMENTS_URL`) |
 | `UpdateCheckConstants` | GitHub API URL, connect/read timeouts, check interval, release-tag URL builder |
-| `HotLocationsConstants` | Wiki JSON URL, seed asset and cache file names, connect/read timeouts, refresh interval |
+| `HotLocationsConstants` | Wiki JSON URL, seed asset and cache file names, connect/read timeouts, refresh interval (also used for hot routes) |
+| `HotRoutesConstants` | Hot routes wiki JSON URL, seed asset and cache file names |
 | `WhatsNewConstants` | APK asset file name for the per-version changelog JSON |
 | `FollowerRestorationConstants` | Follower boot restoration retry delay, max delay, max attempts, jitter range |
 | `SyncConstants` | Group Sync/QR transfer: poll interval/timeout, server backlog, stale-position threshold, NSD service type and discovery timeout, group code length, API key length, API max body bytes, max poll failures, NSD re-discovery retries, export fetch timeout |

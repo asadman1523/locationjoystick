@@ -8,7 +8,7 @@ data class HotItemEntry(
 
 /**
  * Pre-computed tree structure for a set of hot items grouped by country → city.
- * Built once in [SettingsViewModel] from the live hot-locations list (HotLocationsRepository) and the constant HOT_ROUTES list.
+ * Built once in [SettingsViewModel] from the live hot lists (HotLocationsRepository, HotRoutesRepository).
  */
 data class HotItemTree(
     val allIds: Set<String>,

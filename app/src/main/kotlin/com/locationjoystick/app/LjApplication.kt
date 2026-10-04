@@ -6,6 +6,8 @@ import com.locationjoystick.core.common.geocoding.Geocoding
 import com.locationjoystick.core.data.FavoriteRepository
 import com.locationjoystick.core.data.GroupRepository
 import com.locationjoystick.core.data.HotLocationsRepository
+import com.locationjoystick.core.data.HotRoutesRepository
+import com.locationjoystick.core.data.RouteRepository
 import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.location.MockLocationService
 import com.locationjoystick.core.map.maplibre.MapTileHttp
@@ -32,6 +34,12 @@ class LjApplication : Application() {
     @Inject
     lateinit var favoriteRepository: FavoriteRepository
 
+    @Inject
+    lateinit var hotRoutesRepository: HotRoutesRepository
+
+    @Inject
+    lateinit var routeRepository: RouteRepository
+
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
@@ -46,6 +54,14 @@ class LjApplication : Application() {
                 val s = settingsRepository.getSettingsSnapshot().first()
                 if (s.hotLocationsEnabled) {
                     favoriteRepository.upsertHotLocations(hotLocationsRepository.locations.value, s.selectedHotLocationIds)
+                }
+            }
+        }
+        applicationScope.launch {
+            if (hotRoutesRepository.refreshIfStale()) {
+                val s = settingsRepository.getSettingsSnapshot().first()
+                if (s.hotRoutesEnabled) {
+                    routeRepository.upsertHotRoutes(hotRoutesRepository.routes.value, s.selectedHotRouteIds)
                 }
             }
         }

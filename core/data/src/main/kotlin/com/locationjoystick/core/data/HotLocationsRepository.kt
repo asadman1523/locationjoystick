@@ -3,15 +3,10 @@ package com.locationjoystick.core.data
 import android.content.Context
 import com.locationjoystick.core.common.constants.AppConstants
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.json.JSONObject
 import java.io.File
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -35,7 +30,7 @@ data class HotLocation(
 @Singleton
 class HotLocationsRepository
     internal constructor(
-        private val cacheFile: File,
+        cacheFile: File,
         seedJson: () -> String,
     ) {
         @Inject
@@ -51,60 +46,24 @@ class HotLocationsRepository
             },
         )
 
-        internal var client: OkHttpClient =
-            OkHttpClient
-                .Builder()
-                .connectTimeout(AppConstants.HotLocationsConstants.CONNECT_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
-                .readTimeout(AppConstants.HotLocationsConstants.READ_TIMEOUT_MS.toLong(), TimeUnit.MILLISECONDS)
-                .build()
+        private val cache = WikiJsonCache(cacheFile, seedJson, ::parseHotLocations, AppConstants.HotLocationsConstants.URL)
 
-        internal var url: String = AppConstants.HotLocationsConstants.URL
+        internal var client: OkHttpClient
+            get() = cache.client
+            set(v) {
+                cache.client = v
+            }
 
-        private val _locations =
-            MutableStateFlow(
-                runCatching { parseHotLocations(cacheFile.readText()) }.getOrNull()
-                    ?: runCatching { parseHotLocations(seedJson()) }.getOrNull()
-                    ?: emptyList(),
-            )
-        val locations: StateFlow<List<HotLocation>> = _locations
+        internal var url: String
+            get() = cache.url
+            set(v) {
+                cache.url = v
+            }
+
+        val locations: StateFlow<List<HotLocation>> = cache.items
 
         /** True only when a fresh, valid list was fetched and stored. */
-        suspend fun refreshIfStale(): Boolean =
-            withContext(Dispatchers.IO) {
-                val now = System.currentTimeMillis()
-                val hasCache = cacheFile.exists()
-                // ponytail: file mtime as clock; move to DataStore keys if a second consumer needs the timestamp.
-                if (hasCache && now - cacheFile.lastModified() < AppConstants.HotLocationsConstants.CHECK_INTERVAL_MS) {
-                    return@withContext false
-                }
-                val fetched =
-                    runCatching {
-                        val request =
-                            Request
-                                .Builder()
-                                .url(url)
-                                .header("User-Agent", AppConstants.UpdateCheckConstants.userAgent())
-                                .build()
-                        client.newCall(request).execute().use { resp ->
-                            if (!resp.isSuccessful) return@use null
-                            val body = resp.body?.string() ?: return@use null
-                            parseHotLocations(body)?.let { body to it }
-                        }
-                    }.getOrNull()
-                if (fetched == null) {
-                    // A failed check also waits 24h; with no cache a retry happens next launch.
-                    if (hasCache) cacheFile.setLastModified(now)
-                    return@withContext false
-                }
-                val tmp = File(cacheFile.parentFile, cacheFile.name + ".tmp")
-                tmp.writeText(fetched.first)
-                if (!tmp.renameTo(cacheFile)) {
-                    tmp.delete()
-                    return@withContext false
-                }
-                _locations.value = fetched.second
-                true
-            }
+        suspend fun refreshIfStale(): Boolean = cache.refreshIfStale()
     }
 
 /** Parses the published hot-locations JSON; null unless the body is a valid, non-empty schema-1 list. */
