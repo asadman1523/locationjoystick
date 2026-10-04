@@ -103,6 +103,48 @@ class FollowerCatchUpCoordinatorTest {
     }
 
     @Test
+    fun `advance uses the leader speed when it is positive`() {
+        val c = FollowerCatchUpCoordinator()
+        c.setTarget(LatLng(1.0, 0.0), leaderBearing = 0f, leaderSpeedMs = 3f)
+
+        c.advance(LatLng(0.0, 0.0), fallbackSpeedMs = 1.4)
+
+        assertEquals(3f, c.currentSpeedMs())
+    }
+
+    @Test
+    fun `advance falls back to own speed when leader speed is zero`() {
+        val c = FollowerCatchUpCoordinator()
+        c.setTarget(LatLng(1.0, 0.0), leaderBearing = 0f, leaderSpeedMs = 0f)
+
+        c.advance(LatLng(0.0, 0.0), fallbackSpeedMs = 1.4)
+
+        assertEquals(1.4f, c.currentSpeedMs())
+    }
+
+    @Test
+    fun `arrival reports zero speed whatever the leader speed`() {
+        val c = FollowerCatchUpCoordinator()
+        c.setTarget(LatLng(0.0, 0.0), leaderBearing = 0f, leaderSpeedMs = 3f)
+
+        c.advance(LatLng(0.0, 0.0), fallbackSpeedMs = 1.4)
+
+        assertEquals(0f, c.currentSpeedMs())
+    }
+
+    @Test
+    fun `clear forgets the leader speed`() {
+        val c = FollowerCatchUpCoordinator()
+        c.setTarget(LatLng(1.0, 0.0), leaderBearing = 0f, leaderSpeedMs = 3f)
+        c.clear()
+        c.setTarget(LatLng(1.0, 0.0), leaderBearing = 0f)
+
+        c.advance(LatLng(0.0, 0.0), fallbackSpeedMs = 1.4)
+
+        assertEquals(1.4f, c.currentSpeedMs())
+    }
+
+    @Test
     fun `first observed seq is only a baseline`() {
         val c = FollowerCatchUpCoordinator()
         assertFalse(c.observeTeleportSeq(5L))

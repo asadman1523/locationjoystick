@@ -36,7 +36,7 @@ class FollowerExitSpeedResetTest {
         // entering FOLLOWER mode as the real follower tick path does (mode set before ticks arrive).
         service.locationRepository.setMockMode(MockMode.FOLLOWER)
         service.followerCatchUp.setTarget(LatLng(1.0, 2.0), leaderBearing = 90f)
-        service.followerCatchUp.advance(current = LatLng(0.0, 0.0), activeProfileSpeedMs = 3.5)
+        service.followerCatchUp.advance(current = LatLng(0.0, 0.0), fallbackSpeedMs = 3.5)
         assertTrue(service.captureSnapshot(nowMs = 0L).speedMs > 0f)
 
         service.exitFollowerMode()
