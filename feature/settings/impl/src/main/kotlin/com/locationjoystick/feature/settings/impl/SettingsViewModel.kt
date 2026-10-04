@@ -17,6 +17,7 @@ import com.locationjoystick.core.common.util.NsdCodeManager
 import com.locationjoystick.core.common.util.RandomCode
 import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.FavoriteRepository
+import com.locationjoystick.core.data.HotLocationsRepository
 import com.locationjoystick.core.data.RouteRepository
 import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.datastore.SettingsSnapshot
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -61,6 +63,7 @@ class SettingsViewModel
         private val settingsRepository: SettingsRepository,
         private val captureCoordinatesRepository: CaptureCoordinatesRepository,
         private val favoriteRepository: FavoriteRepository,
+        private val hotLocationsRepository: HotLocationsRepository,
         private val routeRepository: RouteRepository,
         private val sensorPermissionBootstrap: SensorPermissionBootstrap,
         private val importExportRepository: ImportExportRepository,
@@ -397,7 +400,10 @@ class SettingsViewModel
         }
 
         fun setHotLocationsEnabled(enabled: Boolean) {
-            val allIds = FavoriteRepository.HOT_LOCATIONS.map { FavoriteRepository.idForLocation(it.name, it.city) }.toSet()
+            val allIds =
+                hotLocationsRepository.locations.value
+                    .map { FavoriteRepository.idForLocation(it.name, it.city) }
+                    .toSet()
             mutableDraft.update { draft ->
                 val currentSelectedIds = draft.selectedHotLocationIds ?: uiState.value.selectedHotLocationIds
                 val newSelectedIds = if (enabled && currentSelectedIds.isEmpty()) allIds else draft.selectedHotLocationIds
@@ -409,19 +415,19 @@ class SettingsViewModel
             mutableDraft.update { it.copy(selectedHotLocationIds = ids) }
         }
 
-        val hotLocationTree: HotItemTree =
-            run {
-                val locations = FavoriteRepository.HOT_LOCATIONS
-                HotItemTree(
-                    allIds = locations.map { FavoriteRepository.idForLocation(it.name, it.city) }.toSet(),
-                    byCountry =
-                        locations.groupBy { it.country }.mapValues { (_, locs) ->
-                            locs.groupBy { it.city }.mapValues { (_, items) ->
-                                items.map { HotItemEntry(FavoriteRepository.idForLocation(it.name, it.city), it.name) }
-                            }
-                        },
-                )
-            }
+        val hotLocationTree: StateFlow<HotItemTree> =
+            hotLocationsRepository.locations
+                .map { locations ->
+                    HotItemTree(
+                        allIds = locations.map { FavoriteRepository.idForLocation(it.name, it.city) }.toSet(),
+                        byCountry =
+                            locations.groupBy { it.country }.mapValues { (_, locs) ->
+                                locs.groupBy { it.city }.mapValues { (_, items) ->
+                                    items.map { HotItemEntry(FavoriteRepository.idForLocation(it.name, it.city), it.name) }
+                                }
+                            },
+                    )
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, HotItemTree.Empty)
 
         fun setHotRoutesEnabled(enabled: Boolean) {
             val allIds = RouteRepository.HOT_ROUTES.map { RouteRepository.idForRoute(it.name, it.city) }.toSet()
@@ -623,7 +629,7 @@ class SettingsViewModel
                     )
                     if (d.hotLocationsEnabled != null || d.selectedHotLocationIds != null) {
                         if (state.hotLocationsEnabled) {
-                            favoriteRepository.upsertHotLocations(state.selectedHotLocationIds)
+                            favoriteRepository.upsertHotLocations(hotLocationsRepository.locations.value, state.selectedHotLocationIds)
                         } else {
                             favoriteRepository.removeHotLocations()
                         }
@@ -939,7 +945,7 @@ class SettingsViewModel
                 ),
             )
             if (data.hotLocationsEnabled) {
-                favoriteRepository.upsertHotLocations(data.selectedHotLocationIds)
+                favoriteRepository.upsertHotLocations(hotLocationsRepository.locations.value, data.selectedHotLocationIds)
             } else {
                 favoriteRepository.removeHotLocations()
             }

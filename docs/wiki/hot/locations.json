@@ -1,0 +1,432 @@
+{
+  "schema": 1,
+  "locations": [
+    {
+      "name": "Pago Pago",
+      "lat": -14.27859,
+      "lon": -170.68886,
+      "country": "American Samoa",
+      "city": "Pago Pago"
+    },
+    {
+      "name": "Circular Quay, Sydney",
+      "lat": -33.861756,
+      "lon": 151.210883,
+      "country": "Australia",
+      "city": "Sydney"
+    },
+    {
+      "name": "Melbourne",
+      "lat": -37.81751,
+      "lon": 144.9633,
+      "country": "Australia",
+      "city": "Melbourne"
+    },
+    {
+      "name": "Sydney",
+      "lat": -33.86882,
+      "lon": 151.209296,
+      "country": "Australia",
+      "city": "Sydney"
+    },
+    {
+      "name": "Cemetery in Brazil",
+      "lat": -23.549616,
+      "lon": -46.655418,
+      "country": "Brazil",
+      "city": "São Paulo"
+    },
+    {
+      "name": "Indaial",
+      "lat": -26.89304,
+      "lon": -49.22998,
+      "country": "Brazil",
+      "city": "Indaial"
+    },
+    {
+      "name": "Porto Alegre",
+      "lat": -30.034647,
+      "lon": -51.217658,
+      "country": "Brazil",
+      "city": "Porto Alegre"
+    },
+    {
+      "name": "São Paulo",
+      "lat": -23.58659,
+      "lon": -46.65702,
+      "country": "Brazil",
+      "city": "São Paulo"
+    },
+    {
+      "name": "Faelledparken",
+      "lat": 55.699161,
+      "lon": 12.575046,
+      "country": "Denmark",
+      "city": "Copenhagen"
+    },
+    {
+      "name": "Jardin des Tuileries",
+      "lat": 48.862796,
+      "lon": 2.329297,
+      "country": "France",
+      "city": "Paris"
+    },
+    {
+      "name": "Jardin du Luxembourg",
+      "lat": 48.846574,
+      "lon": 2.337258,
+      "country": "France",
+      "city": "Paris"
+    },
+    {
+      "name": "Thessaloniki",
+      "lat": 40.62773,
+      "lon": 22.95471,
+      "country": "Greece",
+      "city": "Thessaloniki"
+    },
+    {
+      "name": "Budapest",
+      "lat": 47.52876,
+      "lon": 19.05138,
+      "country": "Hungary",
+      "city": "Budapest"
+    },
+    {
+      "name": "Marine Drive, Mumbai",
+      "lat": 18.943,
+      "lon": 72.8238,
+      "country": "India",
+      "city": "Mumbai"
+    },
+    {
+      "name": "Sector 62, Noida",
+      "lat": 28.682562,
+      "lon": 77.350067,
+      "country": "India",
+      "city": "Noida"
+    },
+    {
+      "name": "Expo '70 Commemorative Park, Osaka",
+      "lat": 34.6664,
+      "lon": 135.5006,
+      "country": "Japan",
+      "city": "Osaka"
+    },
+    {
+      "name": "Osaka",
+      "lat": 34.70246,
+      "lon": 135.50024,
+      "country": "Japan",
+      "city": "Osaka"
+    },
+    {
+      "name": "9 Stops Japan",
+      "lat": 35.6961,
+      "lon": 139.8144,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Minato 1",
+      "lat": 35.6671448,
+      "lon": 139.7574141,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Minato 2",
+      "lat": 35.6669716,
+      "lon": 139.7454765,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Minato 3",
+      "lat": 35.665661,
+      "lon": 139.7461202,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Minato 4",
+      "lat": 35.6586,
+      "lon": 139.7454,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Minato 5",
+      "lat": 35.6560133,
+      "lon": 139.7490935,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Koto 1",
+      "lat": 35.6796307,
+      "lon": 139.8074057,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Koto 2",
+      "lat": 35.67618,
+      "lon": 139.81274,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Koto 3",
+      "lat": 35.6748,
+      "lon": 139.81523,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Koto 4",
+      "lat": 35.6730499,
+      "lon": 139.8164348,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Shinagawa 1",
+      "lat": 35.623578,
+      "lon": 139.748265,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Shinagawa 2",
+      "lat": 35.619162,
+      "lon": 139.74419,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Shinagawa 3",
+      "lat": 35.615484,
+      "lon": 139.744176,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Go Stamp Rally: Shinagawa 4",
+      "lat": 35.603301,
+      "lon": 139.743942,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Shibuya, Tokyo",
+      "lat": 35.661777,
+      "lon": 139.704051,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Tokyo Disneyland",
+      "lat": 35.6312,
+      "lon": 139.8809,
+      "country": "Japan",
+      "city": "Tokyo"
+    },
+    {
+      "name": "Tottori Sand Dunes",
+      "lat": 35.5391,
+      "lon": 134.2351,
+      "country": "Japan",
+      "city": "Tottori"
+    },
+    {
+      "name": "Kiritimati",
+      "lat": 1.98715,
+      "lon": -157.47714,
+      "country": "Kiribati",
+      "city": "Kiritimati"
+    },
+    {
+      "name": "Aotea Square, Auckland",
+      "lat": -36.852095,
+      "lon": 174.76318,
+      "country": "New Zealand",
+      "city": "Auckland"
+    },
+    {
+      "name": "Wellington Botanical Gardens",
+      "lat": -41.28141,
+      "lon": 174.76649,
+      "country": "New Zealand",
+      "city": "Wellington"
+    },
+    {
+      "name": "Singapore",
+      "lat": 1.288719,
+      "lon": 103.848742,
+      "country": "Singapore",
+      "city": "Singapore"
+    },
+    {
+      "name": "Dongdaemun Design Plaza",
+      "lat": 37.5668,
+      "lon": 127.00937,
+      "country": "South Korea",
+      "city": "Seoul"
+    },
+    {
+      "name": "Parc de les Cordelles, Barcelona",
+      "lat": 41.4925,
+      "lon": 2.1353,
+      "country": "Spain",
+      "city": "Barcelona"
+    },
+    {
+      "name": "Jabalquinto",
+      "lat": 38.096122,
+      "lon": -3.626411,
+      "country": "Spain",
+      "city": "Jabalquinto"
+    },
+    {
+      "name": "Canary Islands",
+      "lat": 28.1289,
+      "lon": -15.4339,
+      "country": "Spain",
+      "city": "Las Palmas"
+    },
+    {
+      "name": "Santa Cruz",
+      "lat": 28.48952,
+      "lon": -16.31807,
+      "country": "Spain",
+      "city": "Santa Cruz de Tenerife"
+    },
+    {
+      "name": "Zaragoza",
+      "lat": 41.661342,
+      "lon": -0.892832,
+      "country": "Spain",
+      "city": "Zaragoza"
+    },
+    {
+      "name": "Taipei",
+      "lat": 25.05544,
+      "lon": 121.5225,
+      "country": "Taiwan",
+      "city": "Taipei"
+    },
+    {
+      "name": "Ximending / Taipei Gym Cluster",
+      "lat": 25.0466,
+      "lon": 121.5169,
+      "country": "Taiwan",
+      "city": "Taipei"
+    },
+    {
+      "name": "Antalya",
+      "lat": 36.87944,
+      "lon": 30.709,
+      "country": "Turkey",
+      "city": "Antalya"
+    },
+    {
+      "name": "Bornova Buyuk Park",
+      "lat": 38.46314,
+      "lon": 27.21649,
+      "country": "Turkey",
+      "city": "Izmir"
+    },
+    {
+      "name": "Dubai",
+      "lat": 25.07675,
+      "lon": 55.13294,
+      "country": "United Arab Emirates",
+      "city": "Dubai"
+    },
+    {
+      "name": "UK",
+      "lat": 53.190085,
+      "lon": -2.89158,
+      "country": "United Kingdom",
+      "city": "Cheshire"
+    },
+    {
+      "name": "Big Ben, London",
+      "lat": 51.510357,
+      "lon": -0.116773,
+      "country": "United Kingdom",
+      "city": "London"
+    },
+    {
+      "name": "Grant Park",
+      "lat": 41.875549,
+      "lon": -87.619066,
+      "country": "United States",
+      "city": "Chicago"
+    },
+    {
+      "name": "Millennium Park",
+      "lat": 41.886473,
+      "lon": -87.626356,
+      "country": "United States",
+      "city": "Chicago"
+    },
+    {
+      "name": "Ala Moana Center",
+      "lat": 21.291,
+      "lon": -157.844,
+      "country": "United States",
+      "city": "Honolulu"
+    },
+    {
+      "name": "Honolulu",
+      "lat": 21.29836,
+      "lon": -157.86011,
+      "country": "United States",
+      "city": "Honolulu"
+    },
+    {
+      "name": "Bryant Park",
+      "lat": 40.7537,
+      "lon": -73.9835,
+      "country": "United States",
+      "city": "New York City"
+    },
+    {
+      "name": "Central Park",
+      "lat": 40.785091,
+      "lon": -73.968285,
+      "country": "United States",
+      "city": "New York City"
+    },
+    {
+      "name": "Times Square",
+      "lat": 40.7589,
+      "lon": -73.9851,
+      "country": "United States",
+      "city": "New York City"
+    },
+    {
+      "name": "Ferry Building",
+      "lat": 37.789464,
+      "lon": -122.401621,
+      "country": "United States",
+      "city": "San Francisco"
+    },
+    {
+      "name": "Pier 39",
+      "lat": 37.808673,
+      "lon": -122.409821,
+      "country": "United States",
+      "city": "San Francisco"
+    },
+    {
+      "name": "Union Square",
+      "lat": 37.787993,
+      "lon": -122.407437,
+      "country": "United States",
+      "city": "San Francisco"
+    }
+  ]
+}

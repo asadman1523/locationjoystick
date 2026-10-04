@@ -88,19 +88,30 @@ Set position directly, push one update, camera jumps to new position. Goes throu
 
 ## Hot Locations
 
-Settings → Favorites → "Show hot locations" toggle (default off). When enabled, upserts 26 curated locations into the favorites DB. When disabled, removes only the entries this feature inserted.
+Settings → Favorites → "Show hot locations" toggle (default off). When enabled, upserts the curated locations (see "Source of the list") into the favorites DB. When disabled, removes only the entries this feature inserted.
 
-Key files: `:core:data/FavoriteRepository.kt` (list + upsert/remove logic), `:core:datastore/AppPreferencesDataSource.kt` (`hot_locations_enabled` key)
+Key files: `:core:data/HotLocationsRepository.kt` (list source, cache, refresh), `:core:data/FavoriteRepository.kt` (upsert/remove logic), `docs/wiki/hot/locations.json` (the list), `:core:datastore/AppPreferencesDataSource.kt` (`hot_locations_enabled` key)
 
-**Upsert rule**: match by name + city (via `idForLocation`). If a favorite with the same derived ID already exists, its coordinates and `category` are updated and its original ID is preserved. New entries get IDs prefixed with `hot_`.
+**Upsert rule**: match by name + city (via `idForLocation`). If a favorite with the same derived ID already exists, its coordinates and `category` are updated and its original ID is preserved. New entries get IDs prefixed with `hot_`. The upsert also deletes every `hot_*` favorite whose derived ID is no longer in the list, so a location removed upstream disappears without an app release.
 
 **Remove rule**: delete all favorites whose ID starts with `hot_`. User favorites that happened to share a name with a hot location (and thus had their coords updated) are kept — their ID was never changed to `hot_`.
 
 **Export/import**: `hotLocationsEnabled` field in `ExportData`. Importing a backup with it `true` re-applies the upsert. The per-favorite `category` field also round-trips as part of `favoriteLocations` — old exports without it import cleanly (missing field defaults to `null`).
 
-**Categories**: each `HotLocation` entry carries `country` and `city` fields, used both for the grouped picker UI in Settings and — since this feature — for the `FavoriteLocation.category` field once added as a favorite (set to `country`, e.g. "Pago Pago" gets category "American Samoa").
+**Categories**: each hot location entry carries `country` and `city` fields, used both for the grouped picker UI in Settings and — since this feature — for the `FavoriteLocation.category` field once added as a favorite (set to `country`, e.g. "Pago Pago" gets category "American Samoa").
 
-The 62 locations live in `FavoriteRepository.HOT_LOCATIONS` as a `List<HotLocation>` (`name`, `lat`, `lon`, `country`, `city`).
+### Source of the list
 
+The list is `docs/wiki/hot/locations.json`, published with the wiki at `https://locationjoystick.shrtcts.fr/hot/locations.json`:
+
+```json
+{ "schema": 1, "locations": [ { "name": "", "lat": 0.0, "lon": 0.0, "country": "", "city": "" } ] }
+```
+
+- A body is accepted only if `schema` is `1`, `locations` is non-empty and every entry has all five fields; otherwise the whole body is rejected. Unknown extra fields are ignored. Publish an incompatible format under a new `schema` number: old apps keep their last good copy.
+- The same file is packed into the APK as the seed (`assets.srcDir` in `:core:data`). `HotLocationsRepository.locations` serves the cached copy (`filesDir/hot_locations.json`), else the seed.
+- On app open (`LjApplication`), `refreshIfStale()` fetches silently when the cache is older than 24 h (file modified time as the clock; no toggle, no DataStore key). A failed check keeps the last good copy and also waits 24 h; with no cache it retries next launch.
+- After a successful refresh, if "Show hot locations" is on, `upsertHotLocations` reconciles `hot_*` favorites to the new list. New entries are not auto-selected: they show unchecked in the Settings tree.
+- Identity is `name` + `city` (`idForLocation`). Renaming either is a remove plus a new unchecked entry, so publishers should keep both stable to preserve users' selections.
 
 **API**: favorites can be listed, created, updated and deleted over the leader Control API; see docs/features/group-sync.md, "Content API".

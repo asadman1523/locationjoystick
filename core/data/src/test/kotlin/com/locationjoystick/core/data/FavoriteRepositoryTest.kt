@@ -13,6 +13,13 @@ import org.junit.Test
 class FavoriteRepositoryTest {
     private lateinit var dao: FakeFavoriteDao
     private lateinit var repository: FavoriteRepository
+    private val hot =
+        listOf(
+            HotLocation("Singapore", 1.288719, 103.848742, "Singapore", "Singapore"),
+            HotLocation("Osaka", 34.70246, 135.50024, "Japan", "Osaka"),
+            HotLocation("Sydney", -33.86882, 151.209296, "Australia", "Sydney"),
+        )
+    private val hotIds = hot.map { FavoriteRepository.idForLocation(it.name, it.city) }.toSet()
 
     @Before
     fun setUp() {
@@ -172,13 +179,13 @@ class FavoriteRepositoryTest {
         }
 
     @Test
-    fun `upsertHotLocations inserts all 26 hot locations`() =
+    fun `upsertHotLocations inserts all listed hot locations`() =
         runTest {
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
 
             repository.getFavorites().test {
                 val list = awaitItem()
-                assertEquals(FavoriteRepository.HOT_LOCATIONS.size, list.size)
+                assertEquals(hot.size, list.size)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -186,7 +193,7 @@ class FavoriteRepositoryTest {
     @Test
     fun `upsertHotLocations uses hot_ id prefix for new entries`() =
         runTest {
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
 
             repository.getFavorites().test {
                 val list = awaitItem()
@@ -203,11 +210,11 @@ class FavoriteRepositoryTest {
             // Pre-existing favorite with same name as a hot location, different coords
             repository.addFavorite("user-id", "Singapore", LatLng(0.0, 0.0), createdAt = 1_000L)
 
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
 
             repository.getFavorites().test {
                 val list = awaitItem()
-                assertEquals(FavoriteRepository.HOT_LOCATIONS.size + 1, list.size)
+                assertEquals(hot.size + 1, list.size)
 
                 // Find the hot location entry
                 val hotSingapore = list.first { it.id == "hot_singapore_singapore" }
@@ -228,12 +235,12 @@ class FavoriteRepositoryTest {
     @Test
     fun `upsertHotLocations does not create duplicate when called twice`() =
         runTest {
-            repository.upsertHotLocations()
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
+            repository.upsertHotLocations(hot, hotIds)
 
             repository.getFavorites().test {
                 val list = awaitItem()
-                assertEquals(FavoriteRepository.HOT_LOCATIONS.size, list.size)
+                assertEquals(hot.size, list.size)
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -242,11 +249,11 @@ class FavoriteRepositoryTest {
     fun `upsertHotLocations updates coordinates on second call via id lookup`() =
         runTest {
             // First upsert inserts all hot locations
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
 
             repository.getFavorites().test {
                 val initialList = awaitItem()
-                assertEquals(FavoriteRepository.HOT_LOCATIONS.size, initialList.size)
+                assertEquals(hot.size, initialList.size)
                 val initialSingapore = initialList.first { it.id == "hot_singapore_singapore" }
                 assertEquals(1.288719, initialSingapore.position.latitude, 0.000001)
                 assertEquals(103.848742, initialSingapore.position.longitude, 0.000001)
@@ -258,12 +265,12 @@ class FavoriteRepositoryTest {
             dao.update(wrongEntity)
 
             // Second upsert should find and update via ID
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
 
             repository.getFavorites().test {
                 val finalList = awaitItem()
-                // Should still have exactly 26 entries (no duplicate created)
-                assertEquals(FavoriteRepository.HOT_LOCATIONS.size, finalList.size)
+                // Should still have exactly hot.size entries (no duplicate created)
+                assertEquals(hot.size, finalList.size)
                 // hot_singapore should be updated back to correct coordinates
                 val finalSingapore = finalList.first { it.id == "hot_singapore_singapore" }
                 assertEquals(1.288719, finalSingapore.position.latitude, 0.000001)
@@ -275,7 +282,7 @@ class FavoriteRepositoryTest {
     @Test
     fun `removeHotLocations deletes hot_ prefixed entries`() =
         runTest {
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
             repository.removeHotLocations()
 
             repository.getFavorites().test {
@@ -289,7 +296,7 @@ class FavoriteRepositoryTest {
     fun `removeHotLocations preserves user favorites with non-hot_ ids`() =
         runTest {
             repository.addFavorite("user-1", "My Place", LatLng(10.0, 20.0), createdAt = 1_000L)
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
             repository.removeHotLocations()
 
             repository.getFavorites().test {
@@ -305,7 +312,7 @@ class FavoriteRepositoryTest {
         runTest {
             // User had "Singapore" before hot locations were enabled — upsert does NOT modify it (separate ID)
             repository.addFavorite("user-id", "Singapore", LatLng(0.0, 0.0), createdAt = 1_000L)
-            repository.upsertHotLocations()
+            repository.upsertHotLocations(hot, hotIds)
             repository.removeHotLocations()
 
             // "Singapore" kept because its id is "user-id", not "hot_*"
@@ -317,6 +324,32 @@ class FavoriteRepositoryTest {
                 assertEquals("user-id", list.first().id)
                 assertEquals(0.0, list.first().position.latitude, 0.000001)
                 assertEquals(0.0, list.first().position.longitude, 0.000001)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `upsertHotLocations inserts only selected ids`() =
+        runTest {
+            repository.upsertHotLocations(hot, setOf("hot_osaka_osaka"))
+
+            repository.getFavorites().test {
+                assertEquals(listOf("hot_osaka_osaka"), awaitItem().map { it.id })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+    @Test
+    fun `upsertHotLocations deletes hot favorites no longer listed and keeps user favorites`() =
+        runTest {
+            repository.upsertHotLocations(hot, hotIds)
+            repository.addFavorite("user-id", "Osaka", LatLng(1.0, 2.0), createdAt = 1_000L)
+
+            // Upstream dropped Osaka and Sydney.
+            repository.upsertHotLocations(hot.take(1), hotIds)
+
+            repository.getFavorites().test {
+                assertEquals(setOf("hot_singapore_singapore", "user-id"), awaitItem().map { it.id }.toSet())
                 cancelAndIgnoreRemainingEvents()
             }
         }

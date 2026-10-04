@@ -6,6 +6,7 @@ import com.locationjoystick.core.common.root.SensorPermissionBootstrap
 import com.locationjoystick.core.common.util.NsdCodeManager
 import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.FavoriteRepository
+import com.locationjoystick.core.data.HotLocationsRepository
 import com.locationjoystick.core.data.RouteRepository
 import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.location.CompassHeadingSource
@@ -54,6 +55,7 @@ class SpeedProfileInputTest {
                 settingsRepository = SettingsRepository(fakeDataSource),
                 captureCoordinatesRepository = CaptureCoordinatesRepository(FakePreferencesDataStore()),
                 favoriteRepository = FavoriteRepository(FakeFavoriteDao()),
+                hotLocationsRepository = HotLocationsRepository(context),
                 routeRepository = RouteRepository(routeDao = FakeRouteDao(), context = context),
                 sensorPermissionBootstrap = SensorPermissionBootstrap(context),
                 importExportRepository = ImportExportRepository(context),
