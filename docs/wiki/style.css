@@ -13,7 +13,7 @@
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 ::selection{background:var(--accent);color:var(--bg)}
 
@@ -581,7 +581,7 @@ nav a.nav-ext{
 }
 
 @media(max-width:680px){
-  .layout{grid-template-columns:1fr}
+  .layout{grid-template-columns:minmax(0,1fr)}
 
   .sidebar{
     position:relative;
@@ -590,7 +590,7 @@ nav a.nav-ext{
     border-bottom:1px solid var(--border);
   }
 
-  .brand{padding:14px 52px 12px 16px}
+  .brand{padding:14px 66px 12px 16px;min-height:60px}
 
   .nav-toggle-btn{
     display:flex;
@@ -637,10 +637,23 @@ nav a.nav-ext{
 
   .sidebar-foot{display:none}
 
-  main{padding:28px 20px 56px}
+  main{padding:28px 16px 56px;min-width:0;overflow-wrap:anywhere}
 
-  .feature-section{flex-direction:column;gap:18px}
-  .phone-shot{width:100%;max-width:220px}
+  /* Mono labels at 10-12px are unreadable on a phone; raise to ~13px. */
+  h1,h2,h4{font-size:0.8rem}
+  nav a,.nav-outline a{font-size:0.82rem}
+  nav a.nav-ext{font-size:0.78rem}
+  .nav-group{font-size:0.72rem}
+  .option-table th{font-size:0.72rem}
+  .option-table td{padding:10px 12px}
+
+  .feature-section{flex-direction:column;gap:18px;padding:16px}
+  .phone-shot{width:100%;max-width:240px;margin:0 auto}
+  .section-bullets{width:100%}
+  .section-bullets li{font-size:0.92rem}
+
+  pre{padding:10px 12px;font-size:0.85rem}
+  .nav-toggle-btn{width:44px;height:44px;top:8px}
 
   .card-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 

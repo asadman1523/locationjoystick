@@ -9,6 +9,8 @@ android {
         getByName("main") {
             // Pack the shared changelog entries for offline use.
             assets.srcDir(rootProject.layout.projectDirectory.dir("docs/wiki/changelog"))
+            // Pack the seed hot-locations list (the same file the wiki serves).
+            assets.srcDir(rootProject.layout.projectDirectory.dir("docs/wiki/hot"))
         }
     }
     testOptions {

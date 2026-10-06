@@ -1,6 +1,5 @@
 package com.locationjoystick.core.data
 
-import android.content.Context
 import android.util.Log
 import com.locationjoystick.core.common.constants.AppConstants
 import com.locationjoystick.core.database.dao.RouteDao
@@ -12,34 +11,23 @@ import com.locationjoystick.core.model.LatLng
 import com.locationjoystick.core.model.Route
 import com.locationjoystick.core.model.RouteType
 import com.locationjoystick.core.model.Waypoint
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val TAG = "RouteRepository"
 
-data class HotRoute(
-    val name: String,
-    val country: String,
-    val city: String,
-    val assetPath: String,
-    val routeType: RouteType = RouteType.STRAIGHT,
-)
-
 @Singleton
 class RouteRepository
     @Inject
     constructor(
         private val routeDao: RouteDao,
-        @param:ApplicationContext private val context: Context,
         private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     ) {
         fun getRoutes(): Flow<List<Route>> =
@@ -240,11 +228,8 @@ class RouteRepository
             }
 
         suspend fun upsertHotRoutes(
-            selectedIds: Set<String> =
-                HOT_ROUTES
-                    .map {
-                        idForRoute(it.name, it.city)
-                    }.toSet(),
+            routes: List<HotRoute>,
+            selectedIds: Set<String>,
         ): Result<Unit> =
             withContext(ioDispatcher) {
                 runCatching {
@@ -253,18 +238,19 @@ class RouteRepository
                     val toUpdate = mutableListOf<Pair<RouteEntity, List<WaypointEntity>>>()
                     val toDelete = mutableListOf<RouteEntity>()
 
-                    // Phase 1: read assets + current DB state; build batch lists (no writes yet).
-                    for (hotRoute in HOT_ROUTES) {
+                    // Phase 1: read current DB state; build batch lists (no writes yet).
+                    val listedIds = routes.map { idForRoute(it.name, it.city) }.toSet()
+                    routeDao
+                        .getAll()
+                        .first()
+                        .filter { it.id.startsWith(HOT_ROUTE_ID_PREFIX) && it.id !in listedIds }
+                        .let(toDelete::addAll)
+                    for (hotRoute in routes) {
                         val id = idForRoute(hotRoute.name, hotRoute.city)
                         val existing = routeDao.getById(id)
                         if (id in selectedIds) {
-                            val gpxContent =
-                                context.assets
-                                    .open(hotRoute.assetPath)
-                                    .bufferedReader()
-                                    .readText()
                             val waypoints =
-                                parseWptGpx(gpxContent).mapIndexed { index, latLng ->
+                                hotRoute.waypoints.mapIndexed { index, latLng ->
                                     WaypointEntity(
                                         id = "$id:$index",
                                         routeId = id,
@@ -283,9 +269,7 @@ class RouteRepository
                                     updatedAt = now,
                                 )
                             if (existing != null) {
-                                toUpdate.add(
-                                    entity to waypoints,
-                                )
+                                toUpdate.add(entity to waypoints)
                             } else {
                                 toInsert.add(entity to waypoints)
                             }
@@ -339,51 +323,5 @@ class RouteRepository
                 name: String,
                 city: String,
             ): String = HOT_ROUTE_ID_PREFIX + "$name $city".lowercase().replace(Regex("[^a-z0-9]"), "_")
-
-            fun parseWptGpx(content: String): List<LatLng> {
-                val result = mutableListOf<LatLng>()
-                val parser = XmlPullParserFactory.newInstance().newPullParser()
-                parser.setInput(content.reader())
-                var event = parser.eventType
-                while (event != XmlPullParser.END_DOCUMENT) {
-                    if (event == XmlPullParser.START_TAG && parser.name == "wpt") {
-                        val lat = parser.getAttributeValue(null, "lat")?.toDoubleOrNull()
-                        val lon = parser.getAttributeValue(null, "lon")?.toDoubleOrNull()
-                        if (lat != null && lon != null) result.add(LatLng(lat, lon))
-                    }
-                    event = parser.next()
-                }
-                return result
-            }
-
-            val HOT_ROUTES =
-                listOf(
-                    HotRoute("Faelledparken", "Denmark", "Copenhagen", "hot_routes/cph_park.gpx"),
-                    HotRoute(
-                        "Faelledparken (Via Roads)",
-                        "Denmark",
-                        "Copenhagen",
-                        "hot_routes/cph_park.gpx",
-                        RouteType.GUIDED,
-                    ),
-                    HotRoute(
-                        "Go Stamp Rally: Minato",
-                        "Japan",
-                        "Tokyo",
-                        "hot_routes/tokyo_minato_stamp_rally.gpx",
-                    ),
-                    HotRoute(
-                        "Go Stamp Rally: Koto",
-                        "Japan",
-                        "Tokyo",
-                        "hot_routes/tokyo_koto_stamp_rally.gpx",
-                    ),
-                    HotRoute(
-                        "Go Stamp Rally: Shinagawa",
-                        "Japan",
-                        "Tokyo",
-                        "hot_routes/tokyo_shinagawa_stamp_rally.gpx",
-                    ),
-                )
         }
     }

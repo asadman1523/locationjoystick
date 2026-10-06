@@ -4,6 +4,8 @@ import com.locationjoystick.core.common.root.SensorPermissionBootstrap
 import com.locationjoystick.core.common.util.NsdCodeManager
 import com.locationjoystick.core.data.CaptureCoordinatesRepository
 import com.locationjoystick.core.data.FavoriteRepository
+import com.locationjoystick.core.data.HotLocationsRepository
+import com.locationjoystick.core.data.HotRoutesRepository
 import com.locationjoystick.core.data.RouteRepository
 import com.locationjoystick.core.data.SettingsRepository
 import com.locationjoystick.core.location.CompassHeadingSource
@@ -40,6 +42,7 @@ class SettingsViewModelDraftTest {
 
     private lateinit var viewModel: SettingsViewModel
     private lateinit var captureRepository: CaptureCoordinatesRepository
+    private lateinit var hotLocationsRepository: HotLocationsRepository
 
     @Before
     fun setUp() {
@@ -48,12 +51,15 @@ class SettingsViewModelDraftTest {
         val fakeDataSource = SaveTestPreferencesDataSource()
         val settingsRepo = SettingsRepository(fakeDataSource)
         captureRepository = CaptureCoordinatesRepository(FakePreferencesDataStore())
+        hotLocationsRepository = HotLocationsRepository(context)
         viewModel =
             SettingsViewModel(
                 settingsRepository = settingsRepo,
                 captureCoordinatesRepository = captureRepository,
                 favoriteRepository = FavoriteRepository(FakeFavoriteDao()),
-                routeRepository = RouteRepository(routeDao = FakeRouteDao(), context = context),
+                hotLocationsRepository = hotLocationsRepository,
+                hotRoutesRepository = HotRoutesRepository(context),
+                routeRepository = RouteRepository(routeDao = FakeRouteDao()),
                 sensorPermissionBootstrap = SensorPermissionBootstrap(context),
                 importExportRepository = ImportExportRepository(context),
                 exportSyncServer = ExportSyncServer(),
@@ -237,9 +243,10 @@ class SettingsViewModelDraftTest {
             assertTrue(viewModel.uiState.value.hotLocationsEnabled)
             // All hot location IDs should be selected when enabling with empty selection
             val expectedIds =
-                FavoriteRepository.HOT_LOCATIONS
+                hotLocationsRepository.locations.value
                     .map { FavoriteRepository.idForLocation(it.name, it.city) }
                     .toSet()
+            assertTrue(expectedIds.isNotEmpty())
             assertEquals(expectedIds, viewModel.uiState.value.selectedHotLocationIds)
         }
 

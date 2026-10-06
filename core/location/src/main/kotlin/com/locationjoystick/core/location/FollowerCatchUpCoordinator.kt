@@ -31,17 +31,22 @@ internal class FollowerCatchUpCoordinator {
 
     @Volatile private var leaderBearing: Float = 0f
 
+    @Volatile private var leaderSpeedMs: Float = 0f
+
     /**
      * Latest position received from the leader; walked toward per-tick, never snapped to
      * directly. [leaderBearing] is the leader's own reported heading, used once the follower
-     * catches up — see [advance].
+     * catches up — see [advance]. [leaderSpeedMs] is the leader's reported speed, mirrored while
+     * walking toward the target; 0 means the leader is idle and [advance] uses the fallback.
      */
     fun setTarget(
         position: LatLng,
         leaderBearing: Float,
+        leaderSpeedMs: Float = 0f,
     ) {
         target.set(position)
         this.leaderBearing = leaderBearing
+        this.leaderSpeedMs = leaderSpeedMs
     }
 
     /** Drops only the target (leader went inactive) — leaves the bootstrap gate and speed/bearing alone. */
@@ -54,6 +59,7 @@ internal class FollowerCatchUpCoordinator {
         speedMs = 0f
         bearing = 0f
         leaderBearing = 0f
+        leaderSpeedMs = 0f
         spoofingStarted.set(false)
         lastTeleportSeq.set(null)
         pausedByLeader.set(false)
@@ -88,15 +94,15 @@ internal class FollowerCatchUpCoordinator {
 
     /**
      * One [computeFollowerCatchUp] step from [current] toward the tracked target at
-     * [activeProfileSpeedMs]. Updates [currentSpeedMs]/[currentBearing] and returns the new
+     * the leader's speed, or [fallbackSpeedMs] while the leader reports 0. Updates [currentSpeedMs]/[currentBearing] and returns the new
      * position, or null if there is no target to walk toward.
      */
     fun advance(
         current: LatLng,
-        activeProfileSpeedMs: Double,
+        fallbackSpeedMs: Double,
     ): FollowerCatchUpResult? {
         val t = target.get() ?: return null
-        val result = computeFollowerCatchUp(current, t, activeProfileSpeedMs)
+        val result = computeFollowerCatchUp(current, t, if (leaderSpeedMs > 0f) leaderSpeedMs.toDouble() else fallbackSpeedMs)
         speedMs = result.speedMs
         // Null bearing means the step snapped (arrived, or overshot) — report the leader's own
         // heading instead of freezing whatever direction this follower's catch-up walk last

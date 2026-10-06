@@ -953,12 +953,12 @@ class MockLocationService : Service() {
                     }
                 },
             ) { update ->
-                val (lat, lon, _, bearing, active) = update
+                val (lat, lon, speedMs, bearing, active) = update
                 val leaderTeleported = followerCatchUp.observeTeleportSeq(update.teleportSeq)
                 // An inactive leader's position is stale: keep no target so Teleport to leader
                 // reports "position not yet known" instead of silently moving nowhere.
                 if (active) {
-                    followerCatchUp.setTarget(LatLng(lat, lon), bearing)
+                    followerCatchUp.setTarget(LatLng(lat, lon), bearing, speedMs)
                     groupRepository.setLeaderPosition(LatLng(lat, lon))
                 }
                 when (followerCatchUp.handleLeaderActiveUpdate(active, _state.value)) {

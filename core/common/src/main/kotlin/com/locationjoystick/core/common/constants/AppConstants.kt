@@ -503,6 +503,23 @@ object AppConstants {
         fun releaseUrl(version: String) = "https://github.com/${AppInfo.GITHUB_REPO_SLUG}/releases/tag/v$version"
     }
 
+    /** Hot locations list published in the wiki and cached on-device (see docs/features/favorites.md). */
+    object HotLocationsConstants {
+        const val URL = "${AppInfo.DOCS_URL}hot/locations.json"
+        const val ASSET_FILE_NAME = "locations.json"
+        const val CACHE_FILE_NAME = "hot_locations.json"
+        const val CONNECT_TIMEOUT_MS = 5000
+        const val READ_TIMEOUT_MS = 5000
+        const val CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
+    }
+
+    /** Hot routes list published in the wiki and cached on-device (see docs/features/routes.md). Timeouts and interval reuse [HotLocationsConstants]. */
+    object HotRoutesConstants {
+        const val URL = "${AppInfo.DOCS_URL}hot/routes.json"
+        const val ASSET_FILE_NAME = "routes.json"
+        const val CACHE_FILE_NAME = "hot_routes.json"
+    }
+
     /**
      * Curated "what's new" highlights for the current [AppInfo.VERSION_NAME], shown in the
      * in-app What's New popup (see docs/features/whats-new.md). Update alongside every release
